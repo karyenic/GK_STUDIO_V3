@@ -13,16 +13,27 @@ class AIGateway:
     @staticmethod
     def process_chat_stream(data):
         t_start = time.time()
-        
-        prompt = data.get("prompt", "")
+
+        # UI sürümleri arasında geriye uyumlu alan okuma.
+        # Yeni/moduler UI: prompt, project_name, filePackage
+        # Alternatif UI: message, projectName, file_package
+        prompt = (data.get("prompt") or data.get("message") or "").strip()
         model = data.get("model", "auto")
         role = data.get("role", "default")
-        history = data.get("history", [])
+        history = data.get("history") or []
         images = data.get("images", None)
-        file_package = data.get("filePackage", None)
-        use_web = data.get("web_search", False)
-        is_project = bool(data.get("is_project", False))
-        project_name = data.get("project_name", "").strip()
+        file_package = data.get("filePackage") or data.get("file_package") or None
+        use_web = bool(data.get("web_search", False))
+
+        project_name = (
+            data.get("project_name")
+            or data.get("projectName")
+            or ""
+        ).strip()
+
+        # project_name verilmişse RAG açık kabul edilir.
+        # Böylece farklı UI sürümlerindeki boolean farkı RAG'ı susturamaz.
+        is_project = bool(data.get("is_project", False)) or bool(data.get("isProject", False)) or bool(project_name)
 
         # 1. Otomatik Model Yönlendirme (Auto Router)
         route_label = "DIRECT"
@@ -54,35 +65,47 @@ class AIGateway:
         # 3. RAG Vektör Arama Katmanı
         t_rag_start = time.time()
         rag_context = ""
+        rag_found = False
+        chunk_count = 0
+
         if is_project and project_name:
             rag_context = rag_query(project_name, prompt, k=3) or ""
+            if rag_context:
+                rag_found = True
+                chunk_count = rag_context.count("--- DOSYA:")
+
         t_rag = round(time.time() - t_rag_start, 3)
 
-        # 4. MANUEL DOSYA/KLASÖR PAKETİ İLE RAG BAĞLAMININ NET AYRIŞTIRILMASI
+        print("\n[RAG TELEMETRI]")
+        print(f"  - Proje: {project_name if is_project and project_name else 'AKTIF DEGIL'}")
+        print(f"  - RAG bulundu: {'EVET' if rag_found else 'HAYIR'}")
+        print(f"  - Chunk: {chunk_count}")
+        print(f"  - RAG sure: {t_rag} sn")
+
+        # 4. MANUEL DOSYA/KLASOR PAKETI + RAG BAGLAMI
         context_blocks = []
-        
+
         if file_package:
             context_blocks.append(f"[GEÇİCİ YÜKLENEN DOSYA / KLASÖR PAKETİ]:\n{file_package}")
-            
+
         if rag_context:
-            context_blocks.append(f"{rag_context}")
+            context_blocks.append(rag_context)
 
         if context_blocks:
             full_context_text = "\n\n".join(context_blocks)
             hard_cap_chars = 25000
-            
+
             if len(full_context_text) > hard_cap_chars:
-                # Sınırdan geriye doğru giderek ilk satır sonunu (\n) bulur
-                last_safe_cut = full_context_text.rfind('\n', 0, hard_cap_chars)
-                
-                # Eğer devasa tek bir satırsa (örn. minified kod), boşluk arar
+                last_safe_cut = full_context_text.rfind("\n", 0, hard_cap_chars)
                 if last_safe_cut == -1:
-                    last_safe_cut = full_context_text.rfind(' ', 0, hard_cap_chars)
-                    # O da yoksa mecbur tam karakterden keser
+                    last_safe_cut = full_context_text.rfind(" ", 0, hard_cap_chars)
                     if last_safe_cut == -1:
                         last_safe_cut = hard_cap_chars
-                        
-                full_context_text = full_context_text[:last_safe_cut] + "\n\n[!! Akıllı Parçalama: Token sınırına ulaşıldı, bağlam metni satır bütünlüğü korunarak kırpıldı !!]"
+
+                full_context_text = (
+                    full_context_text[:last_safe_cut]
+                    + "\n\n[!! Akıllı Parçalama: Token sınırına ulaşıldı, bağlam metni satır bütünlüğü korunarak kırpıldı !!]"
+                )
 
             prompt_instruction = prompt if prompt else "Yüklenen içerikleri ve RAG bağlamını inceleyip detaylı Türkçe analiz yap."
             prompt = f"{full_context_text}\n\n[KULLANICI TALİMATI]:\n{prompt_instruction}"
@@ -92,15 +115,19 @@ class AIGateway:
         system_msg = SYSTEM_PROFILE + ("\n[SİSTEM ROLÜ]: " + role_instruction if role_instruction else "")
 
         # 6. Dinamik Context Hesaplama
-        total_input_chars = len(prompt) + sum(len(h.get("content", "")) for h in history)
+        total_input_chars = len(prompt) + sum(len(h.get("content", "")) for h in history if isinstance(h, dict))
         num_ctx = get_num_ctx(selected_model, extra_chars=total_input_chars, is_project=is_project)
 
         yield "data: " + json.dumps({
-            "type": "meta", 
-            "model": selected_model, 
+            "type": "meta",
+            "model": selected_model,
             "route": route_label,
-            "num_ctx": num_ctx
-        }) + "\n\n"
+            "num_ctx": num_ctx,
+            "is_project": is_project,
+            "project_name": project_name,
+            "rag_found": rag_found,
+            "rag_chunks": chunk_count
+        }, ensure_ascii=False) + "\n\n"
 
         # 7. Model İcra Katmanı
         t_gen_start = time.time()
@@ -111,11 +138,13 @@ class AIGateway:
             stream_gen = GeminiBackend.generate_stream(prompt, system_instruction=system_msg, images=images)
         else:
             full_prompt = f"<|im_start|>system\n{system_msg}<|im_end|>\n"
-            valid_history = [h for h in history if h.get('role') in ['user', 'assistant']]
+            valid_history = [h for h in history if isinstance(h, dict) and h.get('role') in ['user', 'assistant']]
             for h in valid_history[-6:]:
                 full_prompt += f"<|im_start|>{h.get('role', 'user')}\n{h.get('content', '')}<|im_end|>\n"
             full_prompt += f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
-            
+
+            # IPEX backend mevcut mimaride seçili modeli ayrı bir runner parametresi
+            # olarak kullanmıyor; mevcut hızlı çekirdek korunuyor.
             stream_gen = IPEXBackend.generate_stream(full_prompt, num_ctx=num_ctx)
 
         for content, done in stream_gen:
@@ -124,16 +153,16 @@ class AIGateway:
                 first_token = False
 
             if content:
-                yield "data: " + json.dumps({"type": "chunk", "text": content}) + "\n\n"
+                yield "data: " + json.dumps({"type": "chunk", "text": content}, ensure_ascii=False) + "\n\n"
 
             if done:
                 break
 
         t_total = round(time.time() - t_start, 2)
-        print(f"\n[PERF TELEMETRİ] Model: {selected_model} [{route_label}] | Total: {t_total}s | TTFT: {t_first_token}s | Context: {num_ctx}")
+        print(f"\n[PERF TELEMETRI] Model: {selected_model} [{route_label}] | Total: {t_total}s | TTFT: {t_first_token}s | Context: {num_ctx}")
 
         yield "data: " + json.dumps({
-            "type": "done", 
+            "type": "done",
             "elapsed_time": t_total,
             "perf": {
                 "ttft": t_first_token,
@@ -141,4 +170,4 @@ class AIGateway:
                 "rag": t_rag,
                 "web": t_web
             }
-        }) + "\n\n"
+        }, ensure_ascii=False) + "\n\n"
