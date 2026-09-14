@@ -1,0 +1,12 @@
+{
+    "conversations": {
+        "8": {
+            "title": "Yeni Sohbet",
+            "model": "qwen2.5:3b",
+            "created": 1789379172505,
+            "messages": []
+        }
+    },
+    "currentConvId": null,
+    "nextId": 9
+}

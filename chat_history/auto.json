@@ -1,34 +1,11 @@
 {
     "conversations": {
-        "5": {
-            "abortCtrl": {},
-            "created": 1789346139942,
-            "isGenerating": true,
+        "proj_C:\\AI_YEREL\\GK_STUDIO_V3_1789340782298": {
+            "abortCtrl": null,
+            "created": 1789340782298,
+            "isGenerating": false,
             "lastRoute": "AUTO-DEFAULT",
             "lastUsedModel": "qwen2.5-coder:7b",
-            "messages": [
-                {
-                    "content": "sen",
-                    "created": 1789346142737,
-                    "role": "user"
-                },
-                {
-                    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
-                    "created": 1789346142740,
-                    "elapsedTime": 1.13,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:7b",
-                    "role": "assistant",
-                    "route": "AUTO-DEFAULT"
-                }
-            ],
-            "model": "auto",
-            "title": "sen"
-        },
-        "proj_C:\\AI_YEREL\\GK_STUDIO_V3_1789340782298": {
-            "created": 1789340782298,
-            "lastRoute": "AUTO-CODER",
-            "lastUsedModel": "qwen2.5-coder:14b",
             "messages": [
                 {
                     "content": "\"C:\\AI_YEREL\\GK_STUDIO_V3\" çalışma alanı aktif. RAG indeks araması devrede.",
@@ -47,6 +24,34 @@
                     "model": "qwen2.5-coder:14b",
                     "role": "assistant",
                     "route": "AUTO-CODER"
+                },
+                {
+                    "content": "evet",
+                    "created": 1789417434282,
+                    "role": "user"
+                },
+                {
+                    "content": "Tamam! Başka bir konuda yardımcı olabilirim. Size nasıl yardımcı olabilirim?",
+                    "created": 1789417434298,
+                    "elapsedTime": 4.31,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:7b",
+                    "role": "assistant",
+                    "route": "AUTO-DEFAULT"
+                },
+                {
+                    "content": "diğer dosyaları incele",
+                    "created": 1789417445090,
+                    "role": "user"
+                },
+                {
+                    "content": "Tabii ki, lütfen `app.py`, `index.html`, `gateway.py` ve `ui.js` dosyalarını paylaşın veya içeriğini yazın. Bana bu dosyaların içeriklerini verdiğinizde daha detaylı ve özelleştirilmiş öneriler verebilirim.",
+                    "created": 1789417445107,
+                    "elapsedTime": 6.18,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:7b",
+                    "role": "assistant",
+                    "route": "AUTO-DEFAULT"
                 }
             ],
             "model": "auto",
@@ -80,79 +85,11 @@
                 }
             ],
             "model": "auto",
+            "pending": false,
             "projectName": "ENTEGRE_muhasebe_2026",
             "title": "📂 ENTEGRE_muhasebe_2026"
-        },
-        "rag_proj_ENTEGRE_muhasebe_2026": {
-            "title": "📂 ENTEGRE_muhasebe_2026",
-            "projectName": "ENTEGRE_muhasebe_2026",
-            "model": "auto",
-            "created": 1789348747611,
-            "messages": [
-                {
-                    "role": "assistant",
-                    "content": "⚡ **\"ENTEGRE_muhasebe_2026\"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır."
-                }
-            ]
-        },
-        "rag_proj_C__AI_YEREL_GK_STUDIO_V3": {
-            "title": "📂 C:\\AI_YEREL\\GK_STUDIO_V3",
-            "projectName": "C:\\AI_YEREL\\GK_STUDIO_V3",
-            "model": "auto",
-            "created": 1789348752741,
-            "messages": [
-                {
-                    "role": "assistant",
-                    "content": "⚡ **\"C:\\AI_YEREL\\GK_STUDIO_V3\"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır."
-                },
-                {
-                    "role": "user",
-                    "content": "önceden incelediğin dosyaları bir kez daha incele",
-                    "created": 1789348790858
-                },
-                {
-                    "role": "assistant",
-                    "content": "Maalesef, verdiğiniz metinde **dosya içeriği** bulunmamakta. Lütfen dosyanın tam içeriğini paylaşır mısınız? Bu sayede, içeriği analiz edip gerekli bilgileri çıkarmaktan memnuniyet duydum.",
-                    "isLiveTimer": false,
-                    "created": 1789348790861,
-                    "model": "qwen2.5-coder:7b",
-                    "route": "AUTO-DEFAULT",
-                    "elapsedTime": 5.68
-                },
-                {
-                    "role": "user",
-                    "content": "app.py dosyasını incele",
-                    "created": 1789348813408
-                },
-                {
-                    "role": "assistant",
-                    "content": "Umarım aşağıdaki **app.py** dosyanın içeriğini daha iyi anlamış olabilirim:\n\n```python\nimport subprocess\nimport threading\nimport sys\n\nBASE_DIR = \"C:\\\\AI_YEREL\\\\GK_STUDIO_V3\"\nSTUDIO_PORT = 5000\nCOLOR_SYS = \"\\033[94m\"\nCOLOR_STUDIO = \"\\033[92m\"\n\ndef stream_log(process, color):\n    for line in iter(process.stdout.readline, ''):\n        print(f\"{color}{line.strip()}\", flush=True)\n\nif __name__ == \"__main__\":\n    env = os.environ.copy()\n    p_studio = subprocess.Popen(\n        [sys.executable, \"app.py\"],\n        cwd=BASE_DIR, env=env,\n        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,\n        text=True, encoding=\"utf-8\", errors=\"replace\", bufsize=1\n    )\n    \n    t_studio = threading.Thread(target=stream_log, args=(p_studio, COLOR_STUDIO), daemon=True)\n    t_studio.start()\n\n    print(f\"\\n{COLOR_SYS} ========================================================\", flush=True)\n    print(f\"{COLOR_SYS} GK STUDIO V3 HAZIR! Web Arayüz: http://127.0.0.1:{STUDIO\n[Üretim kullanıcı tarafından durduruldu.]",
-                    "isLiveTimer": false,
-                    "created": 1789348813410,
-                    "model": "qwen2.5-coder:7b",
-                    "route": "AUTO-DEFAULT"
-                },
-                {
-                    "role": "user",
-                    "content": "app.py workspace.py index.html. ui.js  kodlarını incele hata eksik sorunları listele",
-                    "created": 1789348885456
-                },
-                {
-                    "role": "assistant",
-                    "content": "Özür dilerim, ancak **app.py**, **workspace.py** ve **index.html** dosyalarının içeriğini göremiyorum. Lütfen bu dosyaların tam içeriğini paylaşır mısınız? Bu sayede daha iyi yardımcı olabilirim.",
-                    "isLiveTimer": false,
-                    "created": 1789348885461,
-                    "model": "qwen2.5-coder:14b",
-                    "route": "AUTO-CODER",
-                    "elapsedTime": 6.14
-                }
-            ],
-            "isGenerating": true,
-            "abortCtrl": {},
-            "lastUsedModel": "qwen2.5-coder:14b",
-            "lastRoute": "AUTO-CODER"
         }
     },
-    "currentConvId": "rag_proj_C__AI_YEREL_GK_STUDIO_V3",
-    "nextId": 8
+    "currentConvId": null,
+    "nextId": 20
 }

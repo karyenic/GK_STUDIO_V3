@@ -87,11 +87,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 #pdfBtn{background:#dc2626;border-color:#b91c1c;color:#fff}
 #txtBtn{background:#2563eb;border-color:#1d4ed8;color:#fff}
 #codeBtn{background:#7c3aed;border-color:#6d28d9;color:#fff}
-#micBtn{background:#0284c7;border-color:#0369a1;color:#fff}#stopBtn.stop-tool-btn{background:#dc2626;border-color:#b91c1c;color:#fff;min-width:92px;justify-content:center;transition:filter .15s ease,opacity .15s ease,transform .15s ease;}
-#stopBtn.stop-tool-btn:hover:not(:disabled){background:#b91c1c;color:#fff;}
-#stopBtn.stop-tool-btn:disabled{opacity:.45;cursor:not-allowed;}
-#stopBtn.stop-tool-btn.active-stop{animation:gkStopPulse 1s ease-in-out infinite;}
-@keyframes gkStopPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+#micBtn{background:#0284c7;border-color:#0369a1;color:#fff}
 #folderBtn{background:#0d9488;border-color:#0f766e;color:#fff}
 
 .input-row{display:flex;gap:10px;align-items:stretch}
@@ -99,6 +95,8 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 #prompt:focus{outline:none;border-color:var(--accent)}
 
 #sendBtn{min-width:100px;padding:0 20px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-weight:800;cursor:pointer;font-size:1.1rem;transition:background-color 0.2s ease;}
+#sendBtn.stop-mode{background:#dc2626!important;}
+#sendBtn.stop-mode:hover{background:#b91c1c!important;}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -168,8 +166,10 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
       <button class="tool-btn" id="txtBtn">📝 TXT</button>
       <button class="tool-btn" id="codeBtn">💻 Kod</button>
       <button class="tool-btn" id="micBtn">🎤 Ses</button>
-      <button class="tool-btn stop-tool-btn" id="stopBtn" type="button" title="Devam eden yaniti durdur">🛑 DUR</button>
-
+      <button id="btn-stop-generate" class="btn btn-danger btn-sm" style="display: none; margin-left: auto;">
+        <i class="fas fa-stop"></i> Dur
+    </button>
+</div>
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
       <input type="file" id="pdfInput" accept=".pdf" style="display:none">
       <input type="file" id="folderInput" webkitdirectory multiple style="display:none">

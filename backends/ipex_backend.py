@@ -17,7 +17,7 @@ class IPEXBackend:
             return False
 
     @staticmethod
-    def generate_stream(prompt, num_ctx=16384, temperature=0.2):
+    def generate_stream(prompt, model=None, num_ctx=16384, temperature=0.2):
         """IPEX Runner uç noktasına doğrudan canlı yayın (stream) isteği atar."""
         payload = {
             "prompt": prompt,
@@ -28,6 +28,11 @@ class IPEXBackend:
             "top_p": 0.95,
             "ctx_size": num_ctx
         }
+        
+        # Eğer runner çoklu model destekliyorsa model adını payload'a ekle
+        if model:
+            payload["model"] = model
+
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         req = urllib.request.Request(
             f"{IPEX_RUNNER_URL}/completion",

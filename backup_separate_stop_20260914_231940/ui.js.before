@@ -7,6 +7,7 @@ export const UI = {
   chatBox: null,
   promptEl: null,
   sendBtn: null,
+  stopBtn: null,
   modelSelect: null,
   roleSelect: null,
   historyList: null,
@@ -19,11 +20,14 @@ export const UI = {
   recognition: null,
   isListening: false,
   userScrolledUp: false,
+  activeReader: null,
+  activeRequestController: null,
 
   async init() {
     this.chatBox = document.getElementById('chatBox');
     this.promptEl = document.getElementById('prompt');
     this.sendBtn = document.getElementById('sendBtn');
+    this.stopBtn = document.getElementById('stopBtn');
     this.modelSelect = document.getElementById('modelSelect');
     this.roleSelect = document.getElementById('roleSelect');
     this.historyList = document.getElementById('history-list');
@@ -308,17 +312,6 @@ export const UI = {
           setTimeout(() => copyBtn.textContent = '📋 Kopyala', 2000);
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'msg-act-btn';
-        delBtn.textContent = '🗑 Sil';
-        delBtn.onclick = async () => {
-          const idx = (conv.messages || []).indexOf(m);
-          if (idx < 0) return;
-          conv.messages.splice(idx, 1);
-          State.saveToStorage();
-          await API.saveConversations(State.conversations, State.currentId, State.nextId);
-          this.renderChat();
-        };
         const dlBtn = document.createElement('button');
         dlBtn.className = 'msg-act-btn';
         dlBtn.textContent = '💾 İndir';
@@ -381,16 +374,12 @@ export const UI = {
   },
 
   setSendBtnState(isGenerating) {
-    // Gonder her zaman mavi kalir. DUR ayri kontrol olarak yalnizca uretim sirasinda aktif olur.
-    if (this.sendBtn) {
-      this.sendBtn.textContent = 'Gönder';
-      this.sendBtn.classList.remove('stop-mode');
-      this.sendBtn.disabled = false;
-    }
-    if (this.stopBtn) {
-      this.stopBtn.disabled = !isGenerating;
-      this.stopBtn.classList.toggle('active-stop', !!isGenerating);
-      this.stopBtn.title = isGenerating ? 'Devam eden yaniti durdur' : 'Devam eden yanit yok';
+    if (isGenerating) {
+      this.sendBtn.textContent = "🛑 DUR";
+      this.sendBtn.classList.add("stop-mode");
+    } else {
+      this.sendBtn.textContent = "Gönder";
+      this.sendBtn.classList.remove("stop-mode");
     }
   },
 
@@ -444,6 +433,10 @@ export const UI = {
   },
 
   initEvents() {
+    if (this.stopBtn) {
+      this.stopBtn.style.display = 'none';
+    }
+
     if (this.chatBox) {
       this.chatBox.addEventListener('scroll', () => {
         const distanceToBottom = this.chatBox.scrollHeight - this.chatBox.scrollTop - this.chatBox.clientHeight;
@@ -561,8 +554,13 @@ export const UI = {
 
     this.sendBtn.onclick = () => {
       const conv = State.conversations[State.currentId];
-      if (conv && conv.isGenerating) return;
-      this.handleSend();
+      if (conv && conv.isGenerating && conv.abortCtrl) {
+        conv.abortCtrl.abort();
+        conv.isGenerating = false;
+        this.setSendBtnState(false);
+      } else {
+        this.handleSend();
+      }
     };
 
     this.promptEl.addEventListener('keydown', e => {

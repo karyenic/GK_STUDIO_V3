@@ -1,22 +1,11 @@
 {
-    "ENTEGRE_muhasebe_2026": {
-        "path": "C:\\ENTEGRE_MUHASEBE_2026",
-        "default_model": "auto",
-        "created_at": 1786594883.6692183,
-        "memory": [],
-        "conversationId": "proj_ENTEGRE_muhasebe_2026_1789069124",
-        "indexed": true,
-        "indexed_chunk_count": 170,
-        "indexed_file_count": 21,
-        "indexed_at": 1789336924.3656335
-    },
     "C:\\AI_YEREL\\GK_STUDIO_V3": {
         "path": "C:\\AI_YEREL\\GK_STUDIO_V3",
         "default_model": "auto",
-        "created_at": 1789340775.9288194,
+        "created_at": 1789418099.963486,
         "indexed": true,
-        "indexed_chunk_count": 126,
-        "indexed_file_count": 21,
-        "indexed_at": 1789348765.1044497
+        "indexed_chunk_count": 408,
+        "indexed_file_count": 35,
+        "indexed_at": 1789418142.6602194
     }
 }

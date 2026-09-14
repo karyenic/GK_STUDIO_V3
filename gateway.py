@@ -51,12 +51,26 @@ class AIGateway:
             prompt = f"[CANLI WEB VERİLERİ]:\n{web_context}\n\n[SORGUNUZ]:\n{prompt}"
         t_web = round(time.time() - t_web_start, 3)
 
-        # 3. RAG Vektör Arama Katmanı
+        # 3. RAG Vektör Arama Katmanı ve Telemetri Logları
         t_rag_start = time.time()
         rag_context = ""
+        chunk_count = 0
+        rag_found = False
+        
         if is_project and project_name:
-            rag_context = rag_query(project_name, prompt, k=3) or ""
+            rag_result_text = rag_query(project_name, prompt, k=3)
+            if rag_result_text:
+                rag_context = rag_result_text
+                rag_found = True
+                chunk_count = rag_context.count("--- DOSYA:")
+                
         t_rag = round(time.time() - t_rag_start, 3)
+        
+        print(f"\n[RAG TELEMETRİ LOG]")
+        print(f"  - Hangi Proje?: {project_name if is_project else 'Aktif Değil'}")
+        print(f"  - RAG Bulundu mu?: {'Evet' if rag_found else 'Hayır'}")
+        print(f"  - Kaç Chunk?: {chunk_count}")
+        print(f"  - Embedding / RAG Süresi: {t_rag} sn")
 
         # 4. MANUEL DOSYA/KLASÖR PAKETİ İLE RAG BAĞLAMININ NET AYRIŞTIRILMASI
         context_blocks = []
@@ -72,13 +86,9 @@ class AIGateway:
             hard_cap_chars = 25000
             
             if len(full_context_text) > hard_cap_chars:
-                # Sınırdan geriye doğru giderek ilk satır sonunu (\n) bulur
                 last_safe_cut = full_context_text.rfind('\n', 0, hard_cap_chars)
-                
-                # Eğer devasa tek bir satırsa (örn. minified kod), boşluk arar
                 if last_safe_cut == -1:
                     last_safe_cut = full_context_text.rfind(' ', 0, hard_cap_chars)
-                    # O da yoksa mecbur tam karakterden keser
                     if last_safe_cut == -1:
                         last_safe_cut = hard_cap_chars
                         
@@ -102,7 +112,7 @@ class AIGateway:
             "num_ctx": num_ctx
         }) + "\n\n"
 
-        # 7. Model İcra Katmanı
+        # 7. Model İcra Katmanı (Seçilen model backend'e dinamik olarak aktarılıyor)
         t_gen_start = time.time()
         first_token = True
         t_first_token = 0.0
@@ -116,7 +126,8 @@ class AIGateway:
                 full_prompt += f"<|im_start|>{h.get('role', 'user')}\n{h.get('content', '')}<|im_end|>\n"
             full_prompt += f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
             
-            stream_gen = IPEXBackend.generate_stream(full_prompt, num_ctx=num_ctx)
+            # BURASI KRİTİK: Seçilen model adı arka plandaki backend runner'a iletiliyor
+            stream_gen = IPEXBackend.generate_stream(full_prompt, model=selected_model, num_ctx=num_ctx)
 
         for content, done in stream_gen:
             if first_token and content:

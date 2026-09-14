@@ -19,6 +19,8 @@ export const UI = {
   recognition: null,
   isListening: false,
   userScrolledUp: false,
+  activeReader: null,
+  activeRequestController: null,
 
   async init() {
     this.chatBox = document.getElementById('chatBox');
@@ -308,17 +310,6 @@ export const UI = {
           setTimeout(() => copyBtn.textContent = '📋 Kopyala', 2000);
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'msg-act-btn';
-        delBtn.textContent = '🗑 Sil';
-        delBtn.onclick = async () => {
-          const idx = (conv.messages || []).indexOf(m);
-          if (idx < 0) return;
-          conv.messages.splice(idx, 1);
-          State.saveToStorage();
-          await API.saveConversations(State.conversations, State.currentId, State.nextId);
-          this.renderChat();
-        };
         const dlBtn = document.createElement('button');
         dlBtn.className = 'msg-act-btn';
         dlBtn.textContent = '💾 İndir';
@@ -381,16 +372,12 @@ export const UI = {
   },
 
   setSendBtnState(isGenerating) {
-    // Gonder her zaman mavi kalir. DUR ayri kontrol olarak yalnizca uretim sirasinda aktif olur.
-    if (this.sendBtn) {
-      this.sendBtn.textContent = 'Gönder';
-      this.sendBtn.classList.remove('stop-mode');
-      this.sendBtn.disabled = false;
-    }
-    if (this.stopBtn) {
-      this.stopBtn.disabled = !isGenerating;
-      this.stopBtn.classList.toggle('active-stop', !!isGenerating);
-      this.stopBtn.title = isGenerating ? 'Devam eden yaniti durdur' : 'Devam eden yanit yok';
+    if (isGenerating) {
+      this.sendBtn.textContent = "🛑 DUR";
+      this.sendBtn.classList.add("stop-mode");
+    } else {
+      this.sendBtn.textContent = "Gönder";
+      this.sendBtn.classList.remove("stop-mode");
     }
   },
 
@@ -561,8 +548,13 @@ export const UI = {
 
     this.sendBtn.onclick = () => {
       const conv = State.conversations[State.currentId];
-      if (conv && conv.isGenerating) return;
-      this.handleSend();
+      if (conv && conv.isGenerating && conv.abortCtrl) {
+        conv.abortCtrl.abort();
+        conv.isGenerating = false;
+        this.setSendBtnState(false);
+      } else {
+        this.handleSend();
+      }
     };
 
     this.promptEl.addEventListener('keydown', e => {

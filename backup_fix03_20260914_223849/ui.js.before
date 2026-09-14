@@ -308,17 +308,6 @@ export const UI = {
           setTimeout(() => copyBtn.textContent = '📋 Kopyala', 2000);
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'msg-act-btn';
-        delBtn.textContent = '🗑 Sil';
-        delBtn.onclick = async () => {
-          const idx = (conv.messages || []).indexOf(m);
-          if (idx < 0) return;
-          conv.messages.splice(idx, 1);
-          State.saveToStorage();
-          await API.saveConversations(State.conversations, State.currentId, State.nextId);
-          this.renderChat();
-        };
         const dlBtn = document.createElement('button');
         dlBtn.className = 'msg-act-btn';
         dlBtn.textContent = '💾 İndir';
@@ -381,16 +370,12 @@ export const UI = {
   },
 
   setSendBtnState(isGenerating) {
-    // Gonder her zaman mavi kalir. DUR ayri kontrol olarak yalnizca uretim sirasinda aktif olur.
-    if (this.sendBtn) {
-      this.sendBtn.textContent = 'Gönder';
-      this.sendBtn.classList.remove('stop-mode');
-      this.sendBtn.disabled = false;
-    }
-    if (this.stopBtn) {
-      this.stopBtn.disabled = !isGenerating;
-      this.stopBtn.classList.toggle('active-stop', !!isGenerating);
-      this.stopBtn.title = isGenerating ? 'Devam eden yaniti durdur' : 'Devam eden yanit yok';
+    if (isGenerating) {
+      this.sendBtn.textContent = "🛑 DUR";
+      this.sendBtn.classList.add("stop-mode");
+    } else {
+      this.sendBtn.textContent = "Gönder";
+      this.sendBtn.classList.remove("stop-mode");
     }
   },
 
@@ -561,8 +546,13 @@ export const UI = {
 
     this.sendBtn.onclick = () => {
       const conv = State.conversations[State.currentId];
-      if (conv && conv.isGenerating) return;
-      this.handleSend();
+      if (conv && conv.isGenerating && conv.abortCtrl) {
+        conv.abortCtrl.abort();
+        conv.isGenerating = false;
+        this.setSendBtnState(false);
+      } else {
+        this.handleSend();
+      }
     };
 
     this.promptEl.addEventListener('keydown', e => {
@@ -696,3 +686,346 @@ export const UI = {
     }
   }
 };
+
+// === GK V3 RAG WORKSPACE PATCH START ===
+//
+// Bu katman mevcut V3 UI'yi degistirmez.
+// Sadece:
+// 1) Eski proje sohbetini yeniden Workspace'e baglar.
+// 2) handleSend oncesi dogru projectName'i garanti eder.
+// 3) Mesaj balonlarina Sil butonu ekler.
+// 4) Dinamik render sonrasinda butonlarin kaybolmasini engeller.
+//
+
+UI.rebuildProjectConversationMap = function () {
+
+  State.projectConvMap = {};
+
+  const convs = State.conversations || {};
+
+  Object.entries(convs).forEach(([id, conv]) => {
+
+    if (conv && conv.projectName) {
+      State.projectConvMap[id] = conv.projectName;
+    }
+
+  });
+
+};
+
+UI.rebindCurrentProjectConversation = function () {
+
+  const id = State.currentId;
+
+  if (!id) return;
+
+  const conv = State.conversations?.[id];
+
+  if (!conv) return;
+
+  if (conv.projectName) {
+
+    State.activeProjectName = conv.projectName;
+    State.projectConvMap[id] = conv.projectName;
+
+    if (Workspace && Workspace.refreshProjectList) {
+      Workspace.refreshProjectList(() => {
+        this.renderHistory();
+        this.renderChat();
+
+        const current = State.conversations[State.currentId];
+
+        if (current) {
+          this.updateTopBadge(current);
+        }
+
+      });
+    }
+
+  }
+
+};
+
+UI.ensureMessageDeleteButtons = function () {
+
+  if (!this.chatBox) return;
+
+  const conv = State.conversations?.[State.currentId];
+
+  if (!conv || !Array.isArray(conv.messages)) return;
+
+  const wrappers = this.chatBox.querySelectorAll('.msg-wrapper.assistant');
+
+  wrappers.forEach((wrap) => {
+
+    const msgEl = wrap.querySelector('.msg');
+
+    if (!msgEl) return;
+
+    const text = (msgEl.innerText || '').trim();
+
+    if (!text) return;
+
+    if (wrap.querySelector('.message-delete-btn')) return;
+
+    let actionRow = wrap.querySelector('.msg-actions');
+
+    if (!actionRow) {
+
+      actionRow = document.createElement('div');
+      actionRow.className = 'msg-actions';
+
+      wrap.appendChild(actionRow);
+
+    }
+
+    const btn = document.createElement('button');
+
+    btn.type = 'button';
+    btn.className = 'msg-action-btn message-delete-btn';
+
+    btn.style.borderColor = '#ef4444';
+    btn.style.color = '#ff9999';
+
+    btn.textContent = '🗑️ Sil';
+
+    btn.onclick = (e) => {
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const currentConv = State.conversations?.[State.currentId];
+
+      if (!currentConv || !Array.isArray(currentConv.messages)) {
+        return;
+      }
+
+      const targetText = text.trim();
+
+      // Once tam eslesen son assistant mesajini bul.
+      let foundIndex = -1;
+
+      for (let i = currentConv.messages.length - 1; i >= 0; i--) {
+
+        const m = currentConv.messages[i];
+
+        if (m &&
+            m.role === 'assistant' &&
+            String(m.content || '').trim() === targetText) {
+
+          foundIndex = i;
+          break;
+        }
+
+      }
+
+      // Rendered markdown nedeniyle birebir eslesme olmazsa
+      // basit iceren/eslesen arama yap.
+      if (foundIndex < 0) {
+
+        for (let i = currentConv.messages.length - 1; i >= 0; i--) {
+
+          const m = currentConv.messages[i];
+
+          if (m &&
+              m.role === 'assistant' &&
+              targetText &&
+              String(m.content || '').includes(targetText)) {
+
+            foundIndex = i;
+            break;
+          }
+
+        }
+
+      }
+
+      if (foundIndex < 0) {
+
+        alert('Silinecek mesaj kaydi bulunamadi.');
+        return;
+
+      }
+
+      if (!confirm('Bu yanit silinsin mi?')) {
+        return;
+      }
+
+      currentConv.messages.splice(foundIndex, 1);
+
+      State.saveToStorage();
+
+      if (typeof API.saveConversations === 'function') {
+
+        API.saveConversations(
+          State.conversations,
+          State.currentId,
+          State.nextId
+        ).catch(() => {});
+
+      }
+
+      this.renderChat();
+
+      // Render sonrasi butonlari yeniden kontrol et.
+      setTimeout(() => {
+        this.ensureMessageDeleteButtons();
+      }, 0);
+
+    };
+
+    actionRow.appendChild(btn);
+
+  });
+
+};
+
+UI.installMessageDeleteObserver = function () {
+
+  if (this._messageDeleteObserverInstalled) {
+    return;
+  }
+
+  if (!this.chatBox) {
+    return;
+  }
+
+  this._messageDeleteObserverInstalled = true;
+
+  const observer = new MutationObserver(() => {
+
+    this.ensureMessageDeleteButtons();
+
+  });
+
+  observer.observe(this.chatBox, {
+    childList: true,
+    subtree: true
+  });
+
+  this._messageDeleteObserver = observer;
+
+  this.ensureMessageDeleteButtons();
+
+};
+
+//
+// Mevcut init'i sarmaliyoruz.
+// Orijinal UI tamamen calismaya devam ediyor.
+//
+const _gkOriginalInit = UI.init.bind(UI);
+
+UI.init = function () {
+
+  const result = _gkOriginalInit();
+
+  try {
+
+    this.rebuildProjectConversationMap();
+    this.rebindCurrentProjectConversation();
+
+    setTimeout(() => {
+
+      this.installMessageDeleteObserver();
+
+      this.rebuildProjectConversationMap();
+
+      this.rebindCurrentProjectConversation();
+
+    }, 50);
+
+  } catch (e) {
+
+    console.warn('[GK V3 PATCH] Init sonrasi RAG baglama uyarisi:', e);
+
+  }
+
+  return result;
+};
+
+//
+// Eski sohbet secildiginde mevcut UI'nin
+// projectName bilgisini tekrar aktif Workspace'e bagla.
+//
+const _gkOriginalRenderHistory = UI.renderHistory.bind(UI);
+
+UI.renderHistory = function () {
+
+  this.rebuildProjectConversationMap();
+
+  const result = _gkOriginalRenderHistory();
+
+  try {
+
+    const conv = State.conversations?.[State.currentId];
+
+    if (conv && conv.projectName) {
+
+      State.activeProjectName = conv.projectName;
+      State.projectConvMap[State.currentId] = conv.projectName;
+
+      setTimeout(() => {
+
+        this.ensureMessageDeleteButtons();
+
+        const activeConv =
+          State.conversations?.[State.currentId];
+
+        if (activeConv) {
+          this.updateTopBadge(activeConv);
+        }
+
+      }, 0);
+
+    } else {
+
+      setTimeout(() => {
+        this.ensureMessageDeleteButtons();
+      }, 0);
+
+    }
+
+  } catch (e) {
+
+    console.warn('[GK V3 PATCH] renderHistory uyarisi:', e);
+
+  }
+
+  return result;
+};
+
+//
+// Mesaj gondermeden hemen once:
+// mevcut sohbet proje sohbetiyse projectName'i zorunlu olarak
+// aktif hale getir.
+// Böylece eski RAG sohbeti acildiginda /api/chat:
+// is_project=true
+// project_name="PROJE"
+// olarak gider.
+//
+const _gkOriginalHandleSend = UI.handleSend.bind(UI);
+
+UI.handleSend = function () {
+
+  try {
+
+    const conv = State.conversations?.[State.currentId];
+
+    if (conv && conv.projectName) {
+
+      State.activeProjectName = conv.projectName;
+      State.projectConvMap[State.currentId] = conv.projectName;
+
+    }
+
+  } catch (e) {
+
+    console.warn('[GK V3 PATCH] handleSend proje baglama uyarisi:', e);
+
+  }
+
+  return _gkOriginalHandleSend();
+
+};
+
+// === GK V3 RAG WORKSPACE PATCH END ===

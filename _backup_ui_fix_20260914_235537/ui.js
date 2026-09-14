@@ -101,7 +101,7 @@ export const UI = {
     const d = ts ? new Date(ts) : new Date();
     const dateStr = d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const timeStr = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    return `📅 ${dateStr} ${timeStr}`;
+    return `≡ƒôà ${dateStr} ${timeStr}`;
   },
 
   async updateStatus() {
@@ -124,12 +124,12 @@ export const UI = {
         this.gpuIndicator.textContent = d.gpu_info || 'CPU: %0 | RAM: %0 | GPU: %0';
       }
     } catch {
-      this.statusBar.innerHTML = '<span class="pill down">Bağlantı yok</span>';
+      this.statusBar.innerHTML = '<span class="pill down">Ba─ƒlant─▒ yok</span>';
     }
   },
 
   populateModels(d) {
-    this.modelSelect.innerHTML = '<option value="auto">🤖 Otomatik Yönlendirme (Auto Router)</option>';
+    this.modelSelect.innerHTML = '<option value="auto">≡ƒñû Otomatik Y├╢nlendirme (Auto Router)</option>';
     const add = (lab, arr) => {
       if (!arr || !arr.length) return;
       const g = document.createElement('optgroup');
@@ -143,7 +143,7 @@ export const UI = {
     };
     add('Yerel', d.local || []);
     add('Kod (Coder)', d.coder || []);
-    add('Akıl Yürütme', d.reasoning || []);
+    add('Ak─▒l Y├╝r├╝tme', d.reasoning || []);
     add('Bulut', d.cloud || []);
   },
 
@@ -209,7 +209,7 @@ export const UI = {
       tag.style.fontSize = '0.75rem';
       tag.style.padding = '2px 6px';
       tag.style.marginBottom = '0';
-      tag.textContent = isProjectConv ? '⚡ RAG' : mName;
+      tag.textContent = isProjectConv ? 'ΓÜí RAG' : mName;
 
       const del = document.createElement('button');
       del.className = 'del';
@@ -230,7 +230,7 @@ export const UI = {
       div.appendChild(tag);
       div.appendChild(del);
       
-      // ESKİ SOHBETE TIKLANDIĞINDA TIBBİ DÜZELTME: STATE VE BUTON SENRONİZASYONU
+      // ESK─░ SOHBETE TIKLANDI─₧INDA TIBB─░ D├£ZELTME: STATE VE BUTON SENRON─░ZASYONU
       div.onclick = () => { 
         State.currentId = id; 
         if (c.projectName) {
@@ -243,7 +243,7 @@ export const UI = {
         this.renderChat(); 
         this.updateTopBadge(c);
 
-        // Sohbetin üretim durumuna göre Gönder/Dur butonunu esnek hale getir
+        // Sohbetin ├╝retim durumuna g├╢re G├╢nder/Dur butonunu esnek hale getir
         if (c.isGenerating) {
           this.setSendBtnState(true);
         } else {
@@ -287,9 +287,9 @@ export const UI = {
 
       if (m.isLiveTimer) {
         ts.id = 'liveTimerTag';
-        ts.textContent = `${dateString} · ⏱️ 0.0 sn (düşünüyor...)`;
+        ts.textContent = `${dateString} ┬╖ ΓÅ▒∩╕Å 0.0 sn (d├╝┼ƒ├╝n├╝yor...)`;
       } else if (m.elapsedTime !== undefined) {
-        ts.textContent = `${dateString} · ⏱️ ${m.elapsedTime} sn`;
+        ts.textContent = `${dateString} ┬╖ ΓÅ▒∩╕Å ${m.elapsedTime} sn`;
       } else {
         ts.textContent = dateString;
       }
@@ -301,27 +301,16 @@ export const UI = {
 
         const copyBtn = document.createElement('button');
         copyBtn.className = 'msg-act-btn';
-        copyBtn.textContent = '📋 Kopyala';
+        copyBtn.textContent = '≡ƒôï Kopyala';
         copyBtn.onclick = () => {
           navigator.clipboard.writeText(m.content);
-          copyBtn.textContent = '✅ Kopyalandı!';
-          setTimeout(() => copyBtn.textContent = '📋 Kopyala', 2000);
+          copyBtn.textContent = 'Γ£à Kopyaland─▒!';
+          setTimeout(() => copyBtn.textContent = '≡ƒôï Kopyala', 2000);
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'msg-act-btn';
-        delBtn.textContent = '🗑 Sil';
-        delBtn.onclick = async () => {
-          const idx = (conv.messages || []).indexOf(m);
-          if (idx < 0) return;
-          conv.messages.splice(idx, 1);
-          State.saveToStorage();
-          await API.saveConversations(State.conversations, State.currentId, State.nextId);
-          this.renderChat();
-        };
         const dlBtn = document.createElement('button');
         dlBtn.className = 'msg-act-btn';
-        dlBtn.textContent = '💾 İndir';
+        dlBtn.textContent = '≡ƒÆ╛ ─░ndir';
         dlBtn.onclick = () => {
           const blob = new Blob([m.content], { type: 'text/markdown;charset=utf-8' });
           const a = document.createElement('a');
@@ -371,7 +360,7 @@ export const UI = {
 
   setFilePackage(label, textContent) {
     State.currentFilePackage = textContent;
-    this.packagePreview.innerHTML = `<span>📁 <strong>${label}</strong> pakete alındı.</span><button style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-left:8px;" id="removePkgBtn">Kaldır</button>`;
+    this.packagePreview.innerHTML = `<span>≡ƒôü <strong>${label}</strong> pakete al─▒nd─▒.</span><button style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-left:8px;" id="removePkgBtn">Kald─▒r</button>`;
     this.packagePreview.style.display = 'flex';
     document.getElementById('removePkgBtn').onclick = () => {
       State.currentFilePackage = null;
@@ -381,16 +370,12 @@ export const UI = {
   },
 
   setSendBtnState(isGenerating) {
-    // Gonder her zaman mavi kalir. DUR ayri kontrol olarak yalnizca uretim sirasinda aktif olur.
-    if (this.sendBtn) {
-      this.sendBtn.textContent = 'Gönder';
-      this.sendBtn.classList.remove('stop-mode');
-      this.sendBtn.disabled = false;
-    }
-    if (this.stopBtn) {
-      this.stopBtn.disabled = !isGenerating;
-      this.stopBtn.classList.toggle('active-stop', !!isGenerating);
-      this.stopBtn.title = isGenerating ? 'Devam eden yaniti durdur' : 'Devam eden yanit yok';
+    if (isGenerating) {
+      this.sendBtn.textContent = "≡ƒ¢æ DUR";
+      this.sendBtn.classList.add("stop-mode");
+    } else {
+      this.sendBtn.textContent = "G├╢nder";
+      this.sendBtn.classList.remove("stop-mode");
     }
   },
 
@@ -400,7 +385,7 @@ export const UI = {
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      micBtn.title = "Tarayıcı ses tanımayı desteklemiyor";
+      micBtn.title = "Taray─▒c─▒ ses tan─▒may─▒ desteklemiyor";
       return;
     }
 
@@ -412,7 +397,7 @@ export const UI = {
     this.recognition.onstart = () => {
       this.isListening = true;
       micBtn.style.background = '#dc2626';
-      micBtn.textContent = '🔴 Dinleniyor...';
+      micBtn.textContent = '≡ƒö┤ Dinleniyor...';
     };
 
     this.recognition.onresult = (e) => {
@@ -425,13 +410,13 @@ export const UI = {
     this.recognition.onerror = () => {
       this.isListening = false;
       micBtn.style.background = '#0284c7';
-      micBtn.textContent = '🎤 Ses';
+      micBtn.textContent = '≡ƒÄñ Ses';
     };
 
     this.recognition.onend = () => {
       this.isListening = false;
       micBtn.style.background = '#0284c7';
-      micBtn.textContent = '🎤 Ses';
+      micBtn.textContent = '≡ƒÄñ Ses';
     };
 
     micBtn.onclick = () => {
@@ -462,9 +447,9 @@ export const UI = {
     };
 
     document.getElementById('shutdownBtn').onclick = async () => {
-      if (!confirm("GK Studio kapatılsın mı?")) return;
+      if (!confirm("GK Studio kapat─▒ls─▒n m─▒?")) return;
       try { await API.shutdown(); } catch {}
-      document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0b0b0f;color:#fff;font-size:1.2rem;">GK Studio kapatıldı. Bu sekmeyi kapatabilirsiniz.</div>';
+      document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0b0b0f;color:#fff;font-size:1.2rem;">GK Studio kapat─▒ld─▒. Bu sekmeyi kapatabilirsiniz.</div>';
     };
 
     this.modelSelect.onchange = () => {
@@ -511,13 +496,13 @@ export const UI = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ markdown_text: lastMsg })
         });
-        if (!res.ok) throw new Error('Tablo bulunamadı');
+        if (!res.ok) throw new Error('Tablo bulunamad─▒');
         const blob = await res.blob();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = `excel_tablo_${Date.now()}.xlsx`;
         a.click();
-      } catch (err) { alert('Excel Hatası: ' + err.message); }
+      } catch (err) { alert('Excel Hatas─▒: ' + err.message); }
     };
 
     document.getElementById('pdfBtn').onclick = () => document.getElementById('pdfInput').click();
@@ -533,11 +518,11 @@ export const UI = {
     document.getElementById('folderBtn').onclick = () => document.getElementById('folderInput').click();
     document.getElementById('folderInput').onchange = async e => {
       const files = Array.from(e.target.files || []);
-      let pkg = "[KLASÖR İÇERİĞİ]\n";
+      let pkg = "[KLAS├ûR ─░├çER─░─₧─░]\n";
       for (const f of files) {
         try { pkg += `\n--- DOSYA: ${f.name} ---\n${await f.text()}\n`; } catch {}
       }
-      this.setFilePackage(`Klasör (${files.length} dosya)`, pkg);
+      this.setFilePackage(`Klas├╢r (${files.length} dosya)`, pkg);
       e.target.value = '';
     };
 
@@ -551,7 +536,7 @@ export const UI = {
     document.getElementById('codeBtn').onclick = () => document.getElementById('codeInput').click();
     document.getElementById('codeInput').onchange = async e => {
       const files = Array.from(e.target.files || []);
-      let pkg = "[KOD DOSYALARI PAKETİ]\n";
+      let pkg = "[KOD DOSYALARI PAKET─░]\n";
       for (const f of files) {
         try { pkg += `\n--- KOD DOSYASI: ${f.name} ---\n${await f.text()}\n`; } catch {}
       }
@@ -561,8 +546,13 @@ export const UI = {
 
     this.sendBtn.onclick = () => {
       const conv = State.conversations[State.currentId];
-      if (conv && conv.isGenerating) return;
-      this.handleSend();
+      if (conv && conv.isGenerating && conv.abortCtrl) {
+        conv.abortCtrl.abort();
+        conv.isGenerating = false;
+        this.setSendBtnState(false);
+      } else {
+        this.handleSend();
+      }
     };
 
     this.promptEl.addEventListener('keydown', e => {
@@ -595,8 +585,8 @@ export const UI = {
 
     let displayMsg = text;
     if (!displayMsg) {
-      if (pkg) displayMsg = "📁 [Dosya/Kod Paketi Yüklendi] Analiz Başlatıldı.";
-      else if (imgs.length) displayMsg = "📷 [Görsel Yüklendi] Analiz Başlatıldı.";
+      if (pkg) displayMsg = "≡ƒôü [Dosya/Kod Paketi Y├╝klendi] Analiz Ba┼ƒlat─▒ld─▒.";
+      else if (imgs.length) displayMsg = "≡ƒô╖ [G├╢rsel Y├╝klendi] Analiz Ba┼ƒlat─▒ld─▒.";
     }
 
     conv.messages.push({ role: 'user', content: displayMsg, created: Date.now() });
@@ -628,7 +618,7 @@ export const UI = {
       if (liveTag) {
         const currentElapsed = ((performance.now() - tStart) / 1000).toFixed(1);
         const dateStr = this.getFormattedDate(assistantMsg.created);
-        liveTag.textContent = `${dateStr} · ⏱️ ${currentElapsed} sn (üretiliyor...)`;
+        liveTag.textContent = `${dateStr} ┬╖ ΓÅ▒∩╕Å ${currentElapsed} sn (├╝retiliyor...)`;
       }
     }, 100);
 
@@ -684,7 +674,7 @@ export const UI = {
       clearInterval(liveTimerInterval);
       assistantMsg.isLiveTimer = false;
       if (e.name === 'AbortError') {
-        assistantMsg.content += '\n[Üretim kullanıcı tarafından durduruldu.]';
+        assistantMsg.content += '\n[├£retim kullan─▒c─▒ taraf─▒ndan durduruldu.]';
       } else {
         assistantMsg.content += '\n[Hata]: ' + e.message;
       }
@@ -696,3 +686,222 @@ export const UI = {
     }
   }
 };
+// ============================================================
+// GK V3 CLEAN CONTROLS LAYER
+// - Ayrı Gönder / DUR
+// - Gerçek üretim yokken stale generating temizliği
+// - Asistan mesaj balonunda Sil
+// ============================================================
+
+const _gkBaseInit = UI.init.bind(UI);
+
+UI._gkEnsureStopButton = function () {
+  if (!this.sendBtn) return null;
+
+  let btn = document.getElementById('stopBtn');
+
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'stopBtn';
+    btn.className = 'tool-btn stop';
+    btn.textContent = '🛑 DUR';
+    btn.style.cssText = 'display:none;min-width:78px;min-height:44px;background:#dc2626;color:#fff;border:none;border-radius:6px;font-weight:800;cursor:pointer;';
+    this.sendBtn.parentNode.insertBefore(btn, this.sendBtn.nextSibling);
+  }
+
+  btn.style.minWidth = '78px';
+  btn.style.minHeight = '44px';
+  btn.style.padding = '0 14px';
+  btn.style.fontSize = '1rem';
+  btn.style.fontWeight = '800';
+  btn.style.background = '#dc2626';
+  btn.style.color = '#fff';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '6px';
+  btn.style.cursor = 'pointer';
+
+  return btn;
+};
+
+UI._gkStopGeneration = function () {
+  const conv = State.conversations?.[State.currentId];
+  if (!conv) return;
+
+  if (conv.abortCtrl) {
+    try { conv.abortCtrl.abort(); } catch {}
+  }
+
+  conv.isGenerating = false;
+  conv.pending = false;
+  conv.abortCtrl = null;
+
+  this.setSendBtnState(false);
+  State.saveToStorage();
+  this.renderHistory();
+  this.renderChat();
+};
+
+UI.setSendBtnState = function () {
+  if (!this.sendBtn) return;
+
+  const btn = this._gkEnsureStopButton();
+  const conv = State.conversations?.[State.currentId];
+
+  const active = !!(
+    conv &&
+    conv.isGenerating &&
+    conv.abortCtrl
+  );
+
+  if (!active && conv && conv.isGenerating && !conv.abortCtrl) {
+    conv.isGenerating = false;
+    conv.pending = false;
+  }
+
+  this.sendBtn.textContent = 'Gönder';
+  this.sendBtn.classList.remove('stop-mode');
+  this.sendBtn.style.background = 'var(--accent)';
+  this.sendBtn.style.color = '#fff';
+  this.sendBtn.style.minWidth = '90px';
+  this.sendBtn.style.minHeight = '44px';
+  this.sendBtn.style.fontWeight = '800';
+
+  if (btn) {
+    btn.style.display = active ? 'inline-block' : 'none';
+  }
+};
+
+UI._gkAddDeleteButtons = function () {
+  if (!this.chatBox) return;
+
+  const conv = State.conversations?.[State.currentId];
+  if (!conv || !Array.isArray(conv.messages)) return;
+
+  const assistantMessages = conv.messages.filter(
+    m => m && m.role === 'assistant'
+  );
+
+  const assistantWraps = Array.from(
+    this.chatBox.querySelectorAll('.msg-wrapper.assistant')
+  ).filter(w => {
+    const msg = w.querySelector('.msg');
+    return msg && msg.textContent.trim();
+  });
+
+  assistantWraps.forEach((wrap, assistantIndex) => {
+    const targetMessage = assistantMessages[assistantIndex];
+    if (!targetMessage || targetMessage.isLiveTimer) return;
+
+    let actions = wrap.querySelector('.msg-actions');
+
+    if (!actions) {
+      actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      wrap.appendChild(actions);
+    }
+
+    if (actions.querySelector('.gk-delete-btn')) return;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'msg-act-btn gk-delete-btn';
+    deleteBtn.textContent = '🗑 Sil';
+    deleteBtn.title = 'Bu sohbet balonunu sil';
+
+    deleteBtn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!confirm('Bu yanıt balonu silinsin mi?')) return;
+
+      const currentConv = State.conversations?.[State.currentId];
+      if (!currentConv || !Array.isArray(currentConv.messages)) return;
+
+      const realIndex = currentConv.messages.indexOf(targetMessage);
+
+      if (realIndex < 0) return;
+
+      currentConv.messages.splice(realIndex, 1);
+      State.saveToStorage();
+
+      try {
+        if (typeof API.saveConversations === 'function') {
+          await API.saveConversations(
+            State.conversations,
+            State.currentId,
+            State.nextId
+          );
+        }
+      } catch {}
+
+      this.renderChat();
+      this.renderHistory();
+    };
+
+    actions.appendChild(deleteBtn);
+  });
+};
+
+UI.renderChat = (function (original) {
+  return function () {
+    const result = original.apply(this, arguments);
+
+    setTimeout(() => {
+      this._gkAddDeleteButtons();
+      this.setSendBtnState();
+    }, 0);
+
+    return result;
+  };
+})(UI.renderChat);
+
+UI.init = async function () {
+  const result = await _gkBaseInit();
+
+  // Eski oturumlarda kalan ama gerçekte çalışmayan kilitleri temizle.
+  Object.values(State.conversations || {}).forEach(conv => {
+    if (!conv) return;
+    if (conv.isGenerating && !conv.abortCtrl) {
+      conv.isGenerating = false;
+      conv.pending = false;
+      conv.abortCtrl = null;
+    }
+  });
+
+  this._gkEnsureStopButton();
+
+  // Mevcut UI'nin Gönder handler'ini tamamen temiz kontrol mantigi ile degistir.
+  this.sendBtn.onclick = () => {
+    const conv = State.conversations?.[State.currentId];
+    if (!conv) return;
+
+    if (conv.isGenerating && conv.abortCtrl) {
+      this._gkStopGeneration();
+      return;
+    }
+
+    if (conv.isGenerating && !conv.abortCtrl) {
+      conv.isGenerating = false;
+      conv.pending = false;
+      conv.abortCtrl = null;
+    }
+
+    this.handleSend();
+  };
+
+  const stopBtn = this._gkEnsureStopButton();
+
+  if (stopBtn) {
+    stopBtn.onclick = () => this._gkStopGeneration();
+  }
+
+  // Izgaradaki stale generating durumunu ilk render sonrasinda tekrar temizle.
+  setTimeout(() => {
+    this.setSendBtnState();
+    this._gkAddDeleteButtons();
+  }, 0);
+
+  return result;
+};
+
+console.log('[GK V3] Clean controls layer loaded.');

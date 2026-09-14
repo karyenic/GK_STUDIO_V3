@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GK AI STUDYO - v3 MODÜLER</title>
+<title>GK AI STUDYO - v3 MOD├£LER</title>
 <style>
 :root{--bg:#0b0b0f;--sidebar:#121215;--panel:#16161c;--text:#f4f4f5;--muted:#a1a1aa;--border:#2a2a32;--accent:#2b6e9e;--user:#1e4a6b;--ai:#1c1c24;--input:#141418;--ok:#065f46;--okt:#a7f3d0;--warn:#b45309;--warnt:#fde68a;--cloud:#1d4ed8;--cloudt:#bfdbfe;--fs:1.08rem}
 body.light-theme{--bg:#f2f2f5;--sidebar:#fff;--panel:#f0f0f3;--text:#1a1a1e;--muted:#5a5a62;--border:#dcdce0;--user:#2b6e9e;--ai:#e8e8ec;--input:#f7f7f9}
@@ -73,7 +73,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 .msg-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;width:100%;}
 .msg-timestamp{font-size:.9rem;color:var(--muted);font-family:monospace;font-weight:600;}
 
-/* YANIT ALTI KOPYALA / İNDİR BUTONLARI */
+/* YANIT ALTI KOPYALA / ─░ND─░R BUTONLARI */
 .msg-actions{display:flex;gap:6px;}
 .msg-act-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:4px;font-size:0.78rem;font-weight:700;cursor:pointer;}
 .msg-act-btn:hover{background:var(--accent);color:#fff;}
@@ -87,11 +87,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 #pdfBtn{background:#dc2626;border-color:#b91c1c;color:#fff}
 #txtBtn{background:#2563eb;border-color:#1d4ed8;color:#fff}
 #codeBtn{background:#7c3aed;border-color:#6d28d9;color:#fff}
-#micBtn{background:#0284c7;border-color:#0369a1;color:#fff}#stopBtn.stop-tool-btn{background:#dc2626;border-color:#b91c1c;color:#fff;min-width:92px;justify-content:center;transition:filter .15s ease,opacity .15s ease,transform .15s ease;}
-#stopBtn.stop-tool-btn:hover:not(:disabled){background:#b91c1c;color:#fff;}
-#stopBtn.stop-tool-btn:disabled{opacity:.45;cursor:not-allowed;}
-#stopBtn.stop-tool-btn.active-stop{animation:gkStopPulse 1s ease-in-out infinite;}
-@keyframes gkStopPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+#micBtn{background:#0284c7;border-color:#0369a1;color:#fff}
 #folderBtn{background:#0d9488;border-color:#0f766e;color:#fff}
 
 .input-row{display:flex;gap:10px;align-items:stretch}
@@ -99,6 +95,57 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 #prompt:focus{outline:none;border-color:var(--accent)}
 
 #sendBtn{min-width:100px;padding:0 20px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-weight:800;cursor:pointer;font-size:1.1rem;transition:background-color 0.2s ease;}
+#sendBtn.stop-mode{background:#dc2626!important;}
+#sendBtn.stop-mode:hover{background:#b91c1c!important;}
+
+/* GK V3 - RAG / KONTROL BUTONLARI */
+#projectList .proj-item { padding: 7px 0 !important; }
+#projectList .proj-toolbar { display:flex !important; gap:6px !important; align-items:center !important; }
+#projectList .proj-btn-action {
+  min-height:32px !important;
+  padding:6px 10px !important;
+  border-radius:6px !important;
+  border:1px solid var(--border) !important;
+  font-size:.82rem !important;
+  font-weight:800 !important;
+  line-height:1.1 !important;
+  cursor:pointer !important;
+  white-space:nowrap !important;
+}
+#projectList .proj-btn-action.run { min-width:104px !important; }
+#projectList .proj-btn-action.idx { min-width:104px !important; }
+#projectList .proj-btn-action.del { min-width:78px !important; }
+#projectList .proj-item.active .proj-btn-action.run {
+  background:#065f46 !important;
+  color:#d1fae5 !important;
+  border-color:#10b981 !important;
+  animation:gkWorkspacePulse 1.1s ease-in-out infinite;
+}
+@keyframes gkWorkspacePulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:.58; transform:scale(1.035); }
+}
+#stopBtn {
+  min-width:78px !important;
+  min-height:44px !important;
+  padding:0 14px !important;
+  font-size:1rem !important;
+  font-weight:800 !important;
+}
+.msg-actions { display:flex !important; gap:5px !important; margin-top:5px !important; justify-content:flex-end !important; flex-wrap:wrap !important; }
+.msg-act-btn {
+  background:rgba(255,255,255,.08) !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  color:var(--text) !important;
+  border-radius:4px !important;
+  padding:2px 7px !important;
+  font-size:.75rem !important;
+  cursor:pointer !important;
+}
+.msg-act-btn.gk-delete-btn {
+  border-color:#ef4444 !important;
+  color:#ff9999 !important;
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -109,66 +156,65 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo">GK</div>
-    <div><strong style="font-size:1.15rem">GK AI STUDYO</strong><br><small style="color:var(--muted);font-size:.85rem;font-weight:700">v3 MODÜLER</small></div>
+    <div><strong style="font-size:1.15rem">GK AI STUDYO</strong><br><small style="color:var(--muted);font-size:.85rem;font-weight:700">v3 MOD├£LER</small></div>
   </div>
   <button id="newChatBtn">+ Yeni Sohbet</button>
 
-  <div class="model-label">MODEL LİSTESİ</div>
+  <div class="model-label">MODEL L─░STES─░</div>
   <select id="modelSelect"></select>
 
   <div class="model-label">ROL (UZMANLIK)</div>
   <select id="roleSelect">
     <option value="default">Genel Asistan</option>
-    <option value="coder">Yazılım Mimarı (Coder)</option>
+    <option value="coder">Yaz─▒l─▒m Mimar─▒ (Coder)</option>
     <option value="writer">Teknik Yazar (Writer)</option>
     <option value="analyst">Veri Analisti (Analyst)</option>
-    <option value="engineer">Otomotiv Mühendisi (Engineer)</option>
+    <option value="engineer">Otomotiv M├╝hendisi (Engineer)</option>
   </select>
 
   <div class="model-label" style="display:flex;justify-content:space-between;align-items:center;">
-    <span>📁 PROJELER (RAG WORKSPACE)</span>
+    <span>≡ƒôü PROJELER (RAG WORKSPACE)</span>
     <button id="addProjectBtn" style="background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:0.8rem;cursor:pointer;font-weight:bold;">+ Ekle</button>
   </div>
   <div id="projectList" style="max-height:200px;overflow-y:auto;"></div>
 
-  <div class="model-label">SOHBET GEÇMİŞİ</div>
+  <div class="model-label">SOHBET GE├çM─░┼₧─░</div>
   <div id="history-list" class="history-list"></div>
 </div>
 
 <div id="main">
   <div id="topbar">
     <div class="topbar-left">
-      <button id="sidebarToggle" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;">☰</button>
+      <button id="sidebarToggle" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;">Γÿ░</button>
       <span id="chatTitle" style="font-weight:700;">Sohbet</span>
     </div>
     <div class="topbar-center">
-      <span id="currentModelBadge" style="background:var(--panel);padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-weight:700;">Auto · Orkestratör</span>
+      <span id="currentModelBadge" style="background:var(--panel);padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-weight:700;">Auto ┬╖ Orkestrat├╢r</span>
     </div>
     <div class="topbar-right">
       <div id="statusBar"></div>
       <span id="gpu-indicator">CPU: %0 | RAM: %0 | GPU: %0</span>
       <button id="themeToggle">Tema</button>
-      <button id="shutdownBtn">Çıkış</button>
+      <button id="shutdownBtn">├ç─▒k─▒┼ƒ</button>
     </div>
   </div>
 
   <div id="activeProjectBanner">
-    <span id="activeProjectBannerLabel">📁 AKTİF WORKSPACE: ---</span>
-    <button class="exit-btn" id="exitWorkspaceBtn">⏹️ Çalışmayı Bitir</button>
+    <span id="activeProjectBannerLabel">≡ƒôü AKT─░F WORKSPACE: ---</span>
+    <button class="exit-btn" id="exitWorkspaceBtn">ΓÅ╣∩╕Å ├çal─▒┼ƒmay─▒ Bitir</button>
   </div>
 
   <div id="chatBox"></div>
 
   <div id="inputArea">
     <div class="tools-row">
-      <button class="tool-btn" id="selectImageBtn">📷 Görsel</button>
-      <button class="tool-btn" id="excelBtn">📊 Excel</button>
-      <button class="tool-btn" id="pdfBtn">📄 PDF</button>
-      <button class="tool-btn" id="folderBtn">📂 Klasör</button>
-      <button class="tool-btn" id="txtBtn">📝 TXT</button>
-      <button class="tool-btn" id="codeBtn">💻 Kod</button>
-      <button class="tool-btn" id="micBtn">🎤 Ses</button>
-      <button class="tool-btn stop-tool-btn" id="stopBtn" type="button" title="Devam eden yaniti durdur">🛑 DUR</button>
+      <button class="tool-btn" id="selectImageBtn">≡ƒô╖ G├╢rsel</button>
+      <button class="tool-btn" id="excelBtn">≡ƒôè Excel</button>
+      <button class="tool-btn" id="pdfBtn">≡ƒôä PDF</button>
+      <button class="tool-btn" id="folderBtn">≡ƒôé Klas├╢r</button>
+      <button class="tool-btn" id="txtBtn">≡ƒô¥ TXT</button>
+      <button class="tool-btn" id="codeBtn">≡ƒÆ╗ Kod</button>
+      <button class="tool-btn" id="micBtn">≡ƒÄñ Ses</button>
 
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
       <input type="file" id="pdfInput" accept=".pdf" style="display:none">
@@ -182,7 +228,7 @@ body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:h
 
     <div class="input-row">
       <textarea id="prompt" placeholder="Mesaj yaz... (Auto orkestrasyon devrede)"></textarea>
-      <button id="sendBtn">Gönder</button>
+      <button id="sendBtn">G├╢nder</button>
     </div>
   </div>
 </div>

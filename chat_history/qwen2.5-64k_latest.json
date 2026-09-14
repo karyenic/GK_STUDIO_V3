@@ -1,0 +1,31 @@
+{
+    "conversations": {
+        "15": {
+            "abortCtrl": {},
+            "created": 1789417812177,
+            "isGenerating": true,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "qwen2.5-64k:latest",
+            "messages": [
+                {
+                    "content": "qwen  64 merhaba",
+                    "created": 1789417824526,
+                    "role": "user"
+                },
+                {
+                    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+                    "created": 1789417824529,
+                    "elapsedTime": 1.62,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-64k:latest",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "qwen2.5-64k:latest",
+            "title": "qwen  64 merhaba"
+        }
+    },
+    "currentConvId": null,
+    "nextId": 20
+}

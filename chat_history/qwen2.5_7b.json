@@ -1,42 +1,5 @@
 {
     "conversations": {
-        "1": {
-            "created": 1789341952996,
-            "lastRoute": "DIRECT",
-            "lastUsedModel": "deepseek-r1:7b",
-            "messages": [
-                {
-                    "content": "r164 merhaba",
-                    "created": 1789341988575,
-                    "role": "user"
-                },
-                {
-                    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
-                    "created": 1789341988601,
-                    "elapsedTime": 1.47,
-                    "isLiveTimer": false,
-                    "model": "deepseek-r1-64k:latest",
-                    "role": "assistant",
-                    "route": "DIRECT"
-                },
-                {
-                    "content": "r17b merhaba seninle neler yapabiliriz",
-                    "created": 1789342008219,
-                    "role": "user"
-                },
-                {
-                    "content": "Özür dilerim ama ben bir yapay zeka asistanım ve doğrudan etkileşim gerçekleştiremiyorum. Ancak size genel bilgi almak, sorularıza cevap vermek veya sizin için çeşitli işlemler gerçekleştirmek gibi birçok şeyi yapabilirim. Size nasıl yardımcı olabilirim?",
-                    "created": 1789342008225,
-                    "elapsedTime": 5.36,
-                    "isLiveTimer": false,
-                    "model": "deepseek-r1:7b",
-                    "role": "assistant",
-                    "route": "DIRECT"
-                }
-            ],
-            "model": "qwen2.5:7b",
-            "title": "r164 merhaba"
-        },
         "2": {
             "abortCtrl": {},
             "created": 1789342029752,
@@ -75,8 +38,33 @@
             ],
             "model": "qwen2.5:7b",
             "title": "qwen2,57b merhaba seninle..."
+        },
+        "19": {
+            "title": "📁 [Dosya/Kod Paketi Yükl...",
+            "model": "qwen2.5:7b",
+            "created": 1789420060061,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "📁 [Dosya/Kod Paketi Yüklendi] Analiz Başlatıldı.",
+                    "created": 1789420068861
+                },
+                {
+                    "role": "assistant",
+                    "content": "Güven (İzmir, Türkiye - Otomotiv yan sanayi, yazılım geliştirici) adında bir kullanıcının işletim sistemi Windows 11'de çalışan bir AI studio olan GK STUDIO V3 uygulamasını barındırıyor. Uygulama, Python ile yazılmış ve Flask web çerçevesini kullanmaktadır.\n\nDonanım altyapısı, 32GB RAM ve Intel Arc GPU sahip bir Dell 16250 Plus bilgisayarıdır. Sisteminin performansını izlemek için sürekli sistem bilgisi (CPU, RAM ve GPU kullanımı) monitöre ediliyor ve bu bilgiler API üzerinden erişilebilir.\n\nGK STUDIO V3'de kullanılan backend'ler arasında Gemini Backend ve IPEX Backend bulunmaktadır. Bu backend'ler, AI modellerini çalıştırma ve sonuçları döndürme görevini üstleniyor. Ayrıca, RAG (Retrieval-Augmented Generation) yöntemleri ile vektör veritabanına göre içerik arama yapılıyor.\n\nUygulamada çeşitli API endpointleri bulunmaktadır:\n- `/api/status`: Sistem durumunu kontrol eder.\n- `/api/shutdown`: Uygulamayı kapatır.\n- `/api/models`: Mevcut model listesini döndürür.\n- `/api/chat`: Kullanıcıdan gelen mesajları işler ve sonuçları akış şeklinde döndürür.\n- `/api/projects/list`, `/api/projects/add`, `/api/projects/index`, `/api/projects/delete`: Proje yönetimi fonksiyonlarını içerir.\n\nUygulamanın başlatılmasında, bir PowerShell betiği (`baslat.ps1`) çalıştırılıyor. Bu betik, eski süreçleri temizler, web tarayıcısını açar ve ardından orkestratör scriptini (python orchestrator.py) çalıştırır.\n\nGitHub senkronizasyonu için `github_guncelle.bat` betiği bulunmaktadır. Bu betik, yerel klasörü tamamen silip tekrar başlatarak GitHub deposuna güncellenmesini sağlar.\n\nKullanıcıların işlerini daha iyi yönetmeleri için çeşitli yapılandırma dosyaları mevcut:\n- `.env`: API anahtarları ve diğer çevre değişkenleri içerir.\n- `config.py`: Uygulamanın genel yapılandırması ve sistem profilindeki rol prompları içermektedir.\n\nGK STUDIO V3, kullanıcının yazılım geliştirme, veri analizi ve otomotiv sanayi projeleri gibi çeşitli alanlardaki işleri daha etkili bir şekilde gerçekleştirmesine olanak tanımaktadır. Uygulamanın kullanıcı dostu arayüzü ve dinamik model yönlendirme sistemi, kullanıcının hızlı bir şekilde taleplerini karşılamasını sağlamaktadır.",
+                    "isLiveTimer": false,
+                    "created": 1789420068864,
+                    "model": "qwen2.5:7b",
+                    "route": "DIRECT",
+                    "elapsedTime": 72.05
+                }
+            ],
+            "isGenerating": true,
+            "abortCtrl": {},
+            "lastUsedModel": "qwen2.5:7b",
+            "lastRoute": "DIRECT"
         }
     },
-    "currentConvId": null,
-    "nextId": 8
+    "currentConvId": "19",
+    "nextId": 20
 }
