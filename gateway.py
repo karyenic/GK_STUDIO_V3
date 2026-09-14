@@ -70,9 +70,20 @@ class AIGateway:
         if context_blocks:
             full_context_text = "\n\n".join(context_blocks)
             hard_cap_chars = 25000
-            if len(full_context_text) > hard_cap_chars:
-                full_context_text = full_context_text[:hard_cap_chars] + "\n\n[!! Akıllı Parçalama: Bağlam metni kırpıldı !!]"
             
+            if len(full_context_text) > hard_cap_chars:
+                # Sınırdan geriye doğru giderek ilk satır sonunu (\n) bulur
+                last_safe_cut = full_context_text.rfind('\n', 0, hard_cap_chars)
+                
+                # Eğer devasa tek bir satırsa (örn. minified kod), boşluk arar
+                if last_safe_cut == -1:
+                    last_safe_cut = full_context_text.rfind(' ', 0, hard_cap_chars)
+                    # O da yoksa mecbur tam karakterden keser
+                    if last_safe_cut == -1:
+                        last_safe_cut = hard_cap_chars
+                        
+                full_context_text = full_context_text[:last_safe_cut] + "\n\n[!! Akıllı Parçalama: Token sınırına ulaşıldı, bağlam metni satır bütünlüğü korunarak kırpıldı !!]"
+
             prompt_instruction = prompt if prompt else "Yüklenen içerikleri ve RAG bağlamını inceleyip detaylı Türkçe analiz yap."
             prompt = f"{full_context_text}\n\n[KULLANICI TALİMATI]:\n{prompt_instruction}"
 

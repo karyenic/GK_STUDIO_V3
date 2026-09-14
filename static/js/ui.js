@@ -170,13 +170,14 @@ export const UI = {
     }
     const id = String(State.nextId++);
     const selectedModel = this.modelSelect.value || 'auto';
-    State.conversations[id] = { title: 'Yeni Sohbet', model: selectedModel, created: Date.now(), messages: [] };
+    State.conversations[id] = { title: 'Yeni Sohbet', model: selectedModel, created: Date.now(), messages: [], isGenerating: false };
     State.currentId = id;
     State.saveToStorage();
     API.saveConversations(State.conversations, State.currentId, State.nextId);
     this.renderHistory();
     this.renderChat();
     this.updateTopBadge(State.conversations[id]);
+    this.setSendBtnState(false);
   },
 
   renderHistory() {
@@ -193,13 +194,10 @@ export const UI = {
     const keys = Object.keys(State.conversations).sort((a, b) => (State.conversations[b].created || 0) - (State.conversations[a].created || 0));
     keys.forEach(id => {
       const c = State.conversations[id];
-      const isRagConv = !!(c.projectName || id.startsWith('rag_proj_'));
-      if (isRagConv && !c.projectName) {
-        c.projectName = c.title.replace('📂 ', '').trim();
-      }
+      const isProjectConv = !!c.projectName;
 
       const div = document.createElement('div');
-      div.className = 'hist-item' + (id === State.currentId ? ' active' : '') + (isRagConv ? ' rag-conv-item' : '');
+      div.className = 'hist-item' + (id === State.currentId ? ' active' : '') + (isProjectConv ? ' rag-conv-item' : '');
       
       const t = document.createElement('span');
       t.className = 'title';
@@ -207,11 +205,11 @@ export const UI = {
 
       const mName = c.lastUsedModel || c.model || 'Auto';
       const tag = document.createElement('span');
-      tag.className = 'badge ' + (isRagConv ? 'badge-rag' : this.badgeCls(this.kind(mName)));
+      tag.className = 'badge ' + (isProjectConv ? 'badge-rag' : this.badgeCls(this.kind(mName)));
       tag.style.fontSize = '0.75rem';
       tag.style.padding = '2px 6px';
       tag.style.marginBottom = '0';
-      tag.textContent = isRagConv ? '⚡ RAG' : mName;
+      tag.textContent = isProjectConv ? '⚡ RAG' : mName;
 
       const del = document.createElement('button');
       del.className = 'del';
@@ -232,7 +230,7 @@ export const UI = {
       div.appendChild(tag);
       div.appendChild(del);
       
-      // SOL LİSTEDEN RAG SOHBETİ SEÇİLDİĞİNDE OTOMATİK RAG AKTİVASYONU
+      // ESKİ SOHBETE TIKLANDIĞINDA TIBBİ DÜZELTME: STATE VE BUTON SENRONİZASYONU
       div.onclick = () => { 
         State.currentId = id; 
         if (c.projectName) {
@@ -243,7 +241,14 @@ export const UI = {
         Workspace.refreshProjectList();
         this.renderHistory(); 
         this.renderChat(); 
-        this.updateTopBadge(State.conversations[id]);
+        this.updateTopBadge(c);
+
+        // Sohbetin üretim durumuna göre Gönder/Dur butonunu esnek hale getir
+        if (c.isGenerating) {
+          this.setSendBtnState(true);
+        } else {
+          this.setSendBtnState(false);
+        }
       };
       this.historyList.appendChild(div);
     });
@@ -402,8 +407,7 @@ export const UI = {
       }
     };
 
-    this.recognition.onerror = (e) => {
-      console.warn("Ses tanıma hatası:", e.error);
+    this.recognition.onerror = () => {
       this.isListening = false;
       micBtn.style.background = '#0284c7';
       micBtn.textContent = '🎤 Ses';
@@ -419,11 +423,7 @@ export const UI = {
       if (this.isListening) {
         this.recognition.stop();
       } else {
-        try {
-          this.recognition.start();
-        } catch (e) {
-          this.recognition.stop();
-        }
+        try { this.recognition.start(); } catch { this.recognition.stop(); }
       }
     };
   },
@@ -432,11 +432,7 @@ export const UI = {
     if (this.chatBox) {
       this.chatBox.addEventListener('scroll', () => {
         const distanceToBottom = this.chatBox.scrollHeight - this.chatBox.scrollTop - this.chatBox.clientHeight;
-        if (distanceToBottom > 30) {
-          this.userScrolledUp = true;
-        } else {
-          this.userScrolledUp = false;
-        }
+        this.userScrolledUp = distanceToBottom > 30;
       });
     }
 
@@ -452,9 +448,7 @@ export const UI = {
 
     document.getElementById('shutdownBtn').onclick = async () => {
       if (!confirm("GK Studio kapatılsın mı?")) return;
-      try {
-        await API.shutdown();
-      } catch (e) {}
+      try { await API.shutdown(); } catch {}
       document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0b0b0f;color:#fff;font-size:1.2rem;">GK Studio kapatıldı. Bu sekmeyi kapatabilirsiniz.</div>';
     };
 
@@ -631,7 +625,7 @@ export const UI = {
     try {
       const payload = {
         prompt: text,
-        model: conv.model,
+        model: conv.model || this.modelSelect.value || 'auto',
         role: this.roleSelect.value || 'default',
         history: conv.messages.slice(0, -2),
         images: imgs.length ? imgs : undefined,

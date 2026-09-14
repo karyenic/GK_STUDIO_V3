@@ -101,7 +101,7 @@ export const Workspace = {
           if (!confirm(`"${pName}" projesi silinsin mi?`)) return;
           await API.deleteProject(pName);
           if (State.activeProjectName === pName) this.exitProject(onRender);
-          this.refreshProjectList(onRender);
+          this.refreshProjectList(onReger = onRender);
         };
 
         toolbar.appendChild(runBtn);
@@ -118,24 +118,19 @@ export const Workspace = {
   activateProject(pName, onRender) {
     State.activeProjectName = pName;
     
-    // RAG Projeleri İçin Sabit Tekil Sohbet Kimliği (Deterministic ID)
-    const safeName = pName.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const convId = 'rag_proj_' + safeName;
+    // Her çalıştırmada temiz, bağımsız ve benzersiz bir ID ile sohbet oluşturur (Tıkanıklığı önler)
+    const id = String(State.nextId++);
 
-    // Proje için geçmiş sohbet yoksa tek bir kez oluştur
-    if (!State.conversations[convId]) {
-      State.conversations[convId] = {
-        title: '📂 ' + pName,
-        projectName: pName,
-        model: 'auto',
-        created: Date.now(),
-        messages: [{ role: 'assistant', content: `⚡ **"${pName}"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır.` }]
-      };
-    } else {
-      State.conversations[convId].projectName = pName;
-    }
+    State.conversations[id] = {
+      title: '📂 ' + pName,
+      projectName: pName,
+      model: document.getElementById('modelSelect')?.value || 'auto',
+      created: Date.now(),
+      isGenerating: false,
+      messages: [{ role: 'assistant', content: `⚡ **"${pName}"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır.` }]
+    };
 
-    State.currentId = convId;
+    State.currentId = id;
     State.saveToStorage();
     API.saveConversations(State.conversations, State.currentId, State.nextId);
 
