@@ -1,0 +1,22 @@
+# Python önbellek dosyaları
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sanal ortam
+venv/
+env/
+
+# Çevresel değişkenler ve API anahtarları
+.env
+
+# RAG / ChromaDB Vektör Veritabanı ve Yerel Sohbet Kayıtları
+# (Bunların GitHub'a gitmesine gerek yok, yerelde kalmalı)
+chroma_db/
+rag_db/
+chats/
+conversations/
+
+# Loglar
+*.log

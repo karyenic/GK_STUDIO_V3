@@ -1,0 +1,31 @@
+{
+    "conversations": {
+        "2": {
+            "title": "r164 k merhaba yetenekler...",
+            "model": "deepseek-r1-64k:latest",
+            "created": 1789343722311,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "r164 k merhaba yeteneklerin nedir",
+                    "created": 1789343750928
+                },
+                {
+                    "role": "assistant",
+                    "content": "Merhaba! R164 K yazılım mimarisindeki \"Yetenekler\" rolü hakkında belirli bilgi bulunamadım. Bu terim genellikle yazılım geliştirme sürecinde veya sistem tasarımında kullanılan bir konu olabilir, ancak daha spesifik bilgi olmadan kesin bir tanımlama yapmak zordur.\n\nYetenekler genellikle kullanıcı deneyimi (UX), kullanıcı arayüzü (UI), veri işleme, performans ve güvenlik gibi özelliklere atıfta bulunmaktadır. Ancak, belirli bir yazılım mimarisi veya uygulama için \"Yetenekler\" terimi özel olarak tanımlanmış olabilir.\n\nEğer bu terminin R164 K çerçevesinde nasıl kullanıldığını daha ayrıntılı bilgi verebilirseniz, bana yardımcı olabilirim. Başka bir konuda da yardıma ihtiyacınız olursa lütfen bana bildirin.",
+                    "isLiveTimer": false,
+                    "created": 1789343750932,
+                    "model": "deepseek-r1-64k:latest",
+                    "route": "DIRECT",
+                    "elapsedTime": 13.31
+                }
+            ],
+            "isGenerating": true,
+            "abortCtrl": {},
+            "lastUsedModel": "deepseek-r1-64k:latest",
+            "lastRoute": "DIRECT"
+        }
+    },
+    "currentConvId": "2",
+    "nextId": 3
+}

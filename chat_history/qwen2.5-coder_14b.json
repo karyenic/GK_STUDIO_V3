@@ -1,0 +1,36 @@
+{
+    "conversations": {
+        "proj_ENTEGRE_muhasebe_2026_1789345520478": {
+            "abortCtrl": {},
+            "created": 1789345520478,
+            "isGenerating": true,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "qwen2.5-coder:14b",
+            "messages": [
+                {
+                    "content": "\"ENTEGRE_muhasebe_2026\" çalışma alanı aktif. RAG indeks araması devrede.",
+                    "role": "system"
+                },
+                {
+                    "content": "bu dizinde bir muasebe yazılımı var ama yarım ve sorrunlu inceleyip tamamlamak için neler yapılması gerektiğini özetle anlat",
+                    "created": 1789345590830,
+                    "role": "user"
+                },
+                {
+                    "content": "Kullanıcının belirttiği projeye göre, `ENTEGRE_muhasebe_2026` çalışma alanındaki RAG indeks araması devrede olduğu göz önüne alındığında, muhasebe yazılımı için gerekli düzenlemeleri ve iyileştirmeleri özetle anlatabilirim.\n\n### Temel Görevler ve Düzeltilmeler:\n\n1. **Sipariş İşleyiş Mantığı**\n   - **Yeni Sipariş**: Kullanıcı, sipariş menüsünden \"yeni sipariş\" modu seçilir.\n   - **Cari Hesap Seçimi**: Cariler listesi görülmeli ve harf eşleşmesiyle sıralanabilir. Kullanıcı cari hesabı seçer.\n   - **Stok Listesi**: Stok listesi görünmelidir ve harf eşleşmesiyle sıralanabilir. Kullanıcı ürünleri arayarak seçer.\n   - **Ürün Ekleme**: Seçilen ürünlerin miktarları girilir. Herhangi bir ürün için ekleme yapmak istendiğinde, aynı satıra alt satır eklenir ve eklenen sayı girilir.\n   - **Toplam Sipariş Sayısı**: Eklenen miktarlar toplam sipariş sayısı sütunda görülür.\n\n2. **Sevkiyat İşleyiş Mantığı**\n   - **Sevk Tarihi**: Opsiyonel olarak sevk tarihi girilebilir ve ana sayfada \"bekleyen sevkiyatlar\" bildiriminde sırayla görülür.\n   - **Stok Eksik Kontrolü**: Stok eksikse tamamlanacak ürünler bildiriminde görülecektir.\n   - **Sevkiyat Yapma**: Sevkiyat yapılacağı zaman, her ürün satırında sütunlar (ürün kodu - adı / miktar / birim fiyat/sevk edilen/bakiye/sevk tarihi) görülür. Sevkiyat tuşuna basıldığında her ürün için miktar seçilir ve sevk formu oluşur.\n   - **Sevk Tipi**: İrsaliye ile veya Fatura ile yapılan sevk seçenekleri görüntülenir ve işlem yapılır.\n     - **Irsaliye ile Sevk**: Sadece stok modülüne entegre olur ve irsaliye \"fatura edilecek irsaliye\" sırasına alınır ve ana sayfadaki bildirimlerde gösterilir.\n     - **Fatura ile Sevk**: Stok + Cari hesapla entegre olur. Tamamı sevk edilen sipariş satırlarında gösterilir.\n\n3. **Form Temizleme**\n   - Başarısız girişlerde şifre alanı sıfırlanmalıdır.\n\n4. **Enter ile Giriş**\n   - Şifre alanında `Enter` tuşuna basıldığında giriş tetiklenmelidir.\n\n5. **Ekran Boyutlandırması**\n   - Login ekranı sabit boyutlu ve şık bir Form katmanında kalmalıdır.\n\n### Ekstra Görevler:\n\n1. **Benzersiz Cari Kodu**\n   - `CariKodu` UNIQUE indeksli tutulmalıdır.\n\n2. **Firma Ünvanı**\n   - Ziraat/Ticaret sicil ünvanları eksiksiz kaydedilmelidir.\n\n3. **Vergi Daire Bilgisi**\n   - Vergi daire bilgisi eksiksiz kaydedilmelidir.\n\n4. **Kullanıcı Ekleme/Düzenleme**\n   - Ayarlar ekranından yeni kullanıcı tanımlanabilmelidir.\n\n5. **Rol Tanımları**\n   - Admin, Plasiyer, Muhasebe Elemanı gibi roller ayrıştırılmalıdır.\n\n6. **Aktif Veritabanı Değişimi**\n   - `set_active_db` ile farklı veritabanı yollarına bağlanılabilmelidir.\n\n7. **Şifre Hatalı Şifrede Uyarı**\n   - Hatalı şifrede kullanıcı uyarılmalı, ekran kapanmamalıdır.\n\nBu düzenlemeler ve iyileştirmeler, muhasebe yazılımı için temel işlevlerini güçlendirecektir. Bu şekilde kullanıcının deneyimi artırılarak daha verimli bir sistem elde edilebilir.",
+                    "created": 1789345590832,
+                    "elapsedTime": 89.83,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:14b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "qwen2.5-coder:14b",
+            "projectName": "bu dizinde bir muasebe ya...",
+            "title": "bu dizinde bir muasebe ya..."
+        }
+    },
+    "currentConvId": null,
+    "nextId": 8
+}

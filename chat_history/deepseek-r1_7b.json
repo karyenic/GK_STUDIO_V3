@@ -1,0 +1,173 @@
+{
+    "conversations": {
+        "6": {
+            "abortCtrl": null,
+            "created": 1789347832842,
+            "isGenerating": false,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "deepseek-r1:7b",
+            "messages": [
+                {
+                    "content": "bir muhasebe  ticari entegre programı yazabilirmisin",
+                    "created": 1789347868438,
+                    "role": "user"
+                },
+                {
+                    "content": "Evet, bir muhasebe-ticari entegrasyonu yazılımı yazabilirim. Bu tür bir yazılımın özellikleri şunlar olabilir:\n\n1. **Muhasebe İşlemleri**: Satış ve satın alma siparişleri, faturalar, pos işlemlerini yönetir.\n2. **Ticari İşlemleri**: Fiyatlandırma, stok yönetimini, müşteri/satıcı kayıtlarını içerir.\n3. **Raporlama**: Finansal ve ticari raporlar sunar (mali durum raporu, stok durumu raporu vb.).\n4. **API Entegrasyonları**: Diğer sistemlerle entegre olabilir (bankacılık sistemi, CRM sistemleri vb.).\n\nBu yazılımı geliştirmek için aşağıdaki adımları izleyebiliriz:\n\n### 1. İş Analizi\nKullanıcı ihtiyaçlarını ve iş süreçlerini anlamak önemlidir. Bu aşamada kullanıcı ile görüşmekte ve detaylı bir gereksinim belirtimi yapmaktayım.\n\n### 2. Tasarım\nSistemin arayüzü, modüller ve iş akışını tasarlama adımı olacaktır. Bu aşamada bir yedek plan (UI/UX) oluşturulur.\n\n### 3. Kodlama\nSeçilen dili kullanarak yazılımın temel yapılarını oluşturmak gerekecektir. Örneğin, C#, .NET veya Python gibi popüler diller kullanılabilir.\n\n```csharp\nusing System;\nusing System.Collections.Generic;\n\npublic class MuhasebeTicariEntegrasyonu\n{\n    public List<Siparis> Siparisler { get; set; }\n    public List<Fatura> Faturalar { get; set; }\n\n    public MuhasebeTicariEntegrasyonu()\n    {\n        Siparisler = new List<Siparis>();\n        Faturalar = new List<Fatura>();\n    }\n\n    public void YeniSiparisEkle(Siparis siparis)\n    {\n        Siparisler.Add(siparis);\n    }\n\n    public void FaturayıOlustur(Fatura fatura)\n    {\n        Faturalar.Add(fatura);\n    }\n}\n\npublic class Siparis\n{\n    public int Id { get; set; }\n    public string Maliyet { get; set; }\n    // Diğer özellikler...\n}\n\npublic class Fatura\n{\n    public int Id { get; set; }\n    public decimal Tutar { get; set; }\n    // Diğer özellikler...\n}\n```\n\n### 4. Test\nYazılımın tamamı test edilir. Unit tests, integration tests ve end-to-end tests yazılır.\n\n```csharp\nusing NUnit.Framework;\n\n[TestFixture]\npublic class MuhasebeTicariEntegrasyonuTests\n{\n    [Test]\n    public void YeniSiparisEklemeTesti()\n    {\n        MuhasebeTicariEntegrasyonu sistem = new MuhasebeTicariEntegrasyonu();\n        Siparis siparis = new Siparis { Id = 1, Maliyet = \"100 TL\" };\n        sistem.YeniSiparisEkle(siparis);\n        Assert.AreEqual(1, sistem.Siparisler.Count);\n    }\n}\n```\n\n### 5. Depolama\nVeri depolamak için bir veritabanı (SQL Server, PostgreSQL vb.) kullanılır.\n\n```csharp\npublic class SiparişRepository\n{\n    private readonly string _connectionString;\n\n    public SiparişRepository(string connectionString)\n    {\n        _connectionString = connectionString;\n    }\n\n    public void Ekle(Siparis siparis)\n    {\n        using (var connection = new SqlConnection(_connectionString))\n        {\n            connection.Open();\n            string query = \"INSERT INTO Siparisler (Id, Maliyet) VALUES (@Id, @Maliyet)\";\n            var command = new SqlCommand(query, connection);\n            command.Parameters.AddWithValue(\"@Id\", siparis.Id);\n            command.Parameters.AddWithValue(\"@Maliyet\", siparis.Maliyet);\n            command.ExecuteNonQuery();\n        }\n    }\n}\n```\n\n### 6. Kullanıcı Arayüzü\nKullanıcı arayüzünü oluşturmak için Windows Forms veya WPF kullanabiliriz.\n\n```csharp\npublic partial class MainForm : Form\n{\n    private MuhasebeTicariEntegrasyonu sistem;\n\n    public MainForm()\n    {\n        InitializeComponent();\n        sistem = new MuhasebeTicariEntegrasyonu();\n    }\n\n    private void btnYeniSiparis_Click(object sender, EventArgs e)\n    {\n        Siparis siparis = new Siparis { Id = 1, Maliyet = \"100 TL\" };\n        sistem.YeniSiparisEkle(siparis);\n    }\n}\n```\n\n### 7. Depolama ve Dağıtım\nYazılımı bir sunucuya veya masaüstü uygulaması olarak dağıtabiliriz. Depolama için Azure Blob Storage, SQL Server veya PostgreSQL kullanılabilir.\n\n### Sonuç\nBu adımları takip ederek bir muhasebe-ticari entegrasyonu yazılımı yazabilirim. Her aşamada kullanıcı geri bildirimini ve test sonuçlarını dikkate alarak yazılımı sürekli olarak geliştirebiliriz.",
+                    "created": 1789347868440,
+                    "elapsedTime": 94.92,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                },
+                {
+                    "content": "buradaki yazılım düzeltilip işler hale  getirilebilirmi",
+                    "created": 1789348004197,
+                    "role": "user"
+                },
+                {
+                    "content": "Evet, bu kodu inceleyerek ve gereksinimleri göz önünde bulundurarak onu düzeltebilirim. Ancak, belirli bir problem veya hata olduğunu belirtmeniz daha yardımcı olabilir. Lütfen hangi bölümün veya işlevin hata verdiğini belirtin ve o bölgenin nasıl düzeltilmesini istediğiniz bilgilerini paylaşın. Bu sayede daha etkili bir şekilde yardımcı olabilirim.",
+                    "created": 1789348004202,
+                    "elapsedTime": 38.23,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                },
+                {
+                    "content": "📁 [Dosya/Kod Paketi Yüklendi] Analiz Başlatıldı.",
+                    "created": 1789348058156,
+                    "role": "user"
+                },
+                {
+                    "content": "Maalesef dosyanın içeriği kırpılmış olduğundan tam bir analiz yapamıyorum. Ancak, verilen bilgiye dayanarak dosyanın genel yapısını ve potansiyel problemlerini yorumlayabiliriz.\n\n### Genel Yapı\nDosya paketi, HTML ve CSS kodları içeren bir arayüze sahip oluyor. Bu arayüz, kullanıcıların sohbetler oluşturmak, model seçmek, görseller eklemek, Excel ve PDF dosyaları oluşturmak gibi işlemleri gerçekleştirmelerine olanak tanıyor.\n\n### İşlevleri\n1. **Yeni Sohbet Oluşturma**: Kullanıcılar \"+ Yeni Sohbet\" butonu kullanarak yeni sohbetler oluşturabilirler.\n2. **Model Seçimi**: Kullanıcılar belirli bir modeli seçerek bu modelle sohbet edebilirler.\n3. **Sohbet Gezmişi**: Kullanıcılar geçmiş sohbetleri görebilir ve mevcut olanları açabilirler.\n4. **Görsel Ekleme**: Kullanıcılar görseller ekleyerek mesajlarına görselleri ekleyebilirler.\n5. **Excel Oluşturma**: Kullanıcılar seçilen görseli Excel dosyasına dönüştürebilirler.\n6. **PDF Yükleme**: Kullanıcılar PDF dosyalarını yükleyebilir ve sistem tarafından işlenebilir.\n\n### Olası Hatalar ve Yenilikler\n1. **Dosya Paketi Kırpımı**: Dosyanın içeriği kırpılmış olduğundan tam bir analiz yapılamıyor. Bu nedenle bazı potansiyel hatalara veya eksikliklere dikkat etmek zor olabilir.\n2. **API İş\n[Üretim kullanıcı tarafından durduruldu.]",
+                    "created": 1789348058212,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                },
+                {
+                    "content": "📁 [Dosya/Kod Paketi Yüklendi] Analiz Başlatıldı.",
+                    "created": 1789348154167,
+                    "role": "user"
+                },
+                {
+                    "content": "Dosyanız bir web arayüzü için HTML, CSS ve JavaScript kullanılmıştır. Bu arayüz, kullanıcıların sohbetler oluşturmak, model seçmek, görseller eklemek ve Excel ve PDF dosyaları oluşturmak gibi işlemleri gerçekleştirmelerine olanak tanır.\n\n### Analiz\n\n1. **HTML Yapısı**:\n   - Arayüz temel olarak `div` et\n[Üretim kullanıcı tarafından durduruldu.]",
+                    "created": 1789348154196,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "deepseek-r1:7b",
+            "title": "bir muhasebe  ticari ente..."
+        },
+        "proj_C:\\AI_YEREL\\GK_STUDIO_V3_1789344949751": {
+            "abortCtrl": {},
+            "created": 1789344949751,
+            "isGenerating": true,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "deepseek-r1:7b",
+            "messages": [
+                {
+                    "content": "\"C:\\AI_YEREL\\GK_STUDIO_V3\" çalışma alanı aktif. RAG indeks araması devrede.",
+                    "role": "system"
+                },
+                {
+                    "content": "bu dizindeki kodları incele hata, eksik, mantıksal sorun varsa listele",
+                    "created": 1789344996627,
+                    "role": "user"
+                },
+                {
+                    "content": "Kodları analiz ettim ve aşağıdaki hatalar, eksiklikler ve mantıksal sorunlar belirtildi:\n\n### Dosya: gateway.py (parça 4)\n\n1. **UnboundLocalError**: `t_ge` fonksiyonu içinde tanımlanmış bir değişken kullanılmadan önce tanımlanması gerekmektedir.\n   ```python\n   # Tanımlama eksiklikleri:\n   t_ge = None  # veya diğer uygun değer\n   ```\n\n2. **SyntaxError**: `yield \"data: \" + json.dumps({ ... }) + \"\\n\\n\"` ifadesinde, `t_ge` fonksiyonu içinde tanımlanmış bir değişken kullanılmadan önce tanımlanması gerekmektedir.\n   ```python\n   # Tanımlama eksiklikleri:\n   t_ge = None  # veya diğer uygun değer\n   ```\n\n3. **IndentationError**: `t_ge` fonksiyonu içinde tanımlanmış bir değişken kullanılmadan önce tanımlanması gerekmektedir.\n   ```python\n   # Tanımlama eksiklikleri:\n   t_ge = None  # veya diğer uygun değer\n   ```\n\n4. **UnboundLocalError**: `t_ge` fonksiyonu içinde tanımlanmış bir değişken kullanılmadan önce tanımlanması gerekmektedir.\n   ```python\n   # Tanımlama eksiklikleri:\n   t_ge = None  # veya diğer uygun değer\n   ```\n\n### Dosya: rag.py (parça 1)\n\n1. **SyntaxError**: `def clear_project_index(proj_name):` fonksiyonunun sonuna kadar tanımlanmış bir ifade bulunmamaktadır.\n   ```python\n   def clear_project_index(proj_name):\n       \"\"\"Proje silindiğinde veya yeniden eklendiğinde eski Vektör DB hafızasını temizler.\"\"\"\n       if not CHROMADB_AVAILABLE:\n           return\n       try:\n           client = _chroma_client()\n           coll_name = _safe_collection_name(proj_name)\n           client.delete_collection(coll_name)\n           print(f\"[RAG TEMİZLİK] '{proj_name}' eski indeks önbelleği silindi.\")\n       except Exception as e:  # Hata yakalama eklemesi\n           pass\n   ```\n\n2. **SyntaxError**: `def index_project_folder(proj_name, proj_path):` fonksiyonunun sonuna kadar tanımlanmış bir ifade bulunmamaktadır.\n   ```python\n   def index_project_folder(proj_name, proj_path):\n       \"\"\"Proje klasörünü tarar, parçalar ve Port 11435 üzerinden ChromaDB'ye indeksler.\"\"\"\n       if not CHROMADB_AVAILABLE:\n           return {\"status\": \"error\", \"message\": \"chromadb kütüphanesi\"}\n       # Kodu tamamlayınız\n   ```\n\n### Dosya: static\\index.html (parça 12)\n\n1. **HTML Syntax Error**: `<span>📁 PROJELER (RAG WORKSPACE)</span>` etiketi içindeki `style=\"display:flex;justify-content:space-between;align-items:center;\"` özelliği doğru formatta yazılmış olmalıdır.\n   ```html\n   <span style=\"display:flex;justify-content:space-between;align-items:center;\">📁 PROJELER (RAG WORKSPACE)</span>\n   ```\n\n2. **HTML Syntax Error**: `<button id=\"addProjectBtn\" style=\"background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:4px;font` etiketinin sonuna `size:.85rem;font-weight:700\">Ekle</button>` eklenebilir.\n   ```html\n   <button id=\"addProjectBtn\" style=\"background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:.85rem;font-weight:700\">Ekle</button>\n   ```\n\nBu hataları ve eksiklikleri çözmeden önce kodun tamamlanması gerekmektedir.",
+                    "created": 1789344996631,
+                    "elapsedTime": 83.37,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "deepseek-r1:7b",
+            "projectName": "bu dizindeki kodları ince...",
+            "title": "bu dizindeki kodları ince..."
+        },
+        "proj_C:\\AI_YEREL\\GK_STUDIO_V3_1789347258645": {
+            "abortCtrl": null,
+            "created": 1789347258645,
+            "isGenerating": false,
+            "lastRoute": "AUTO-CODER",
+            "lastUsedModel": "qwen2.5-coder:14b",
+            "messages": [
+                {
+                    "content": "⚡ **\"C:\\AI_YEREL\\GK_STUDIO_V3\"** RAG çalışma alanı aktif edildi. Projedeki dosya ve kodlarınız üzerinden indeks araması yapılacaktır.",
+                    "role": "assistant"
+                },
+                {
+                    "content": "bir inceleme daha yapalım : app.py workspace.py indexçhtml ui.js",
+                    "created": 1789347270146,
+                    "role": "user"
+                },
+                {
+                    "content": "Yüklediğiniz dosyaları ve parçaları inceliyor olabilirim. Lütfen belirli bir konu veya sorun hakkında detaylı bilgi verin, böylece en iyi şekilde yardımcı olabilirim. Örneğin:\n\n1. **app.py**: Bu dosyanın hangi işlevselliği içerdiğini ve neye hizmet edip etmediğini sormak isterim.\n2. **workspace.py**: Bu dosyanın proje yönetimine veya workspace işlemleri konusunda nasıl yardımcı olabileceğinden bahsetmek isterim.\n3. **index.html**: Bu HTML sayfasının hangi bölümlerini içerdiğini ve neye hizmet edip etmediğini sormak isterim.\n\nBelirli bir konuyla ilgili daha fazla bilgi verin, böylece daha yardımcı olabiliriz.",
+                    "created": 1789347270149,
+                    "elapsedTime": 18.98,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:7b",
+                    "role": "assistant",
+                    "route": "AUTO-DEFAULT"
+                },
+                {
+                    "content": "teşekkür ederim",
+                    "created": 1789347528747,
+                    "role": "user"
+                },
+                {
+                    "content": "Rag.py dosyası ve app.py dosyanızın bazı bölümleri incelendi. İşte belirli parçaların kısa açıklamaları:\n\n1. **ui.js (parça 15)**:\n   - `or('.msg')`: 'msg' sınıfına sahip bir elementi seçer.\n   - `if (msgDiv) { ... }`: Eğer `msgDiv` varsa, içindeki içeriği işler (`marked.parse(accText)` veya `textContent`).\n   - `if (window.hljs) msgDiv.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));`: Eğer Highlight.js yüklüyse, `<code>` etiketli bölümleri sözdizimi vurgulayan kod blokları olarak işler.\n\n2. **rag.py (parça 1)**:\n   - `while start < n:`: Verilen metni belirli boyutlara bölmek için döngü.\n   - `end = min(start + chunk_size, n)`: Mevcut indeksi ve maksimum indeksi karşılaştırarak bitiş indeksini hesaplar.\n   - `chunk = text[start:end].strip()`: Geçici bir parçası oluşturur ve baş ve son boşlukları kaldırır.\n   - `if chunk:`: Eğer geçici parça boş değilse, listeye ekler.\n\n3. **index.html (parça 12)**:\n   - HTML yapısı ve kullanıcı arayüzü elemanlarının tanımlanması.\n   - Yeni sohbet oluşturmak için bir buton (`#newChatBtn`).\n   - Model listesi ve rol seçicileri (`#modelSelect`, `#roleSelect`).\n   - Projeleri yönetmek için bir buton (`#addProjectBtn`).\n\nBunlar genel özetlerdir. Eğer belirli parçalar hakkında daha fazla detaya ihtiyacınız varsa veya başka bir konuyla ilgili yardıma ihtiyacınız varsa, lütfen bana bildirin!",
+                    "created": 1789347528750,
+                    "elapsedTime": 35.4,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:7b",
+                    "role": "assistant",
+                    "route": "AUTO-DEFAULT"
+                },
+                {
+                    "content": "kodlarda hata eksik çakışma vs hatalar varmı",
+                    "created": 1789347599459,
+                    "role": "user"
+                },
+                {
+                    "content": "Tabii ki, kodlarınızda birkaç hata ve potansiyel sorun olduğunu fark ettim. İşte onları ve önerilen düzeltmeleri:\n\n### `rag.py` Dosyası\n\n#### 1. Hata: `CHROMADB_AVAILABLE` değişkeninin tanımlanması eksik\n- **Hata**: `CHROMADB_AVAILABLE` değişkeninin tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```python\n  CHROMADB_AVAILABLE = False  # Varsayılan olarak chromadb kütüphanesi bulunmuyor kabul edilir\n  ```\n\n### `static/js/ui.js` Dosyası\n\n#### 2. Hata: `marked.parse(accText)` hatalı\n- **Hata**: `marked` modülü tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```javascript\n  if (window.marked) {\n    try { msgDiv.innerHTML = window.marked.parse(accText); } catch { msgDiv.textContent = accText; }\n  } else {\n    msgDiv.textContent = accText;\n  }\n  ```\n\n### `gateway.py` Dosyası\n\n#### 3. Hata: `system_msg` değişkeninin tanımlanması eksik\n- **Hata**: `system_msg` değişkeni, `role_instruction`'ın tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```python\n  system_msg = SYSTEM_PROFILE + (\"\\n[SİSTEM ROLÜ]: \" + role_instruction if role_instruction else \"\")\n  ```\n\n### Genel Özet\n\n1. `rag.py` dosyasında `CHROMADB_AVAILABLE` değişkeninin tanımlanması eksik.\n2. `static/js/ui.js` dosyasında `marked.parse(accText)` hatalı ve `marked` modülü tanımlanmadığı durumda hata verecektir.\n3. `gateway.py` dosyasında `system_msg` değişkeninin tanımlanması eksik.\n\nBu düzeltmeleri yaparak, kodlarınızın daha güvenli ve hata ayıklanabilir olmasını sağlayabilirsiniz. Herhangi bir başka sorun veya hata varsa lütfen bildirin!",
+                    "created": 1789347599463,
+                    "elapsedTime": 43.26,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:14b",
+                    "role": "assistant",
+                    "route": "AUTO-CODER"
+                },
+                {
+                    "content": "bu hatalar hala varmı incele",
+                    "created": 1789347715409,
+                    "role": "user"
+                },
+                {
+                    "content": "Tabii ki, bu dosyaları ve parçaları daha detaylı bir şekilde inceleyip bazı hataları tespit etmeye çalışalım:\n\n### `static/js/ui.js` Dosyası\n\n#### 1. Hata: `marked.parse(accText)` hatalı\n- **Hata**: `marked` modülü tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```javascript\n  if (window.marked) {\n    try { msgDiv.innerHTML = window.marked.parse(accText); } catch { msgDiv.textContent = accText; }\n  } else {\n    msgDiv.textContent = accText;\n  }\n  ```\n\n#### 2. Hata: `hljs.highlightElement(el)` hatalı\n- **Hata**: `highlight.js` modülü tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```javascript\n  if (window.hljs) {\n    msgDiv.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));\n  }\n  ```\n\n### `rag.py` Dosyası\n\n#### 3. Hata: `CHROMADB_AVAILABLE` değişkeninin tanımlanması eksik\n- **Hata**: `CHROMADB_AVAILABLE` değişkeninin tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```python\n  CHROMADB_AVAILABLE = False  # Varsayılan olarak chromadb kütüphanesi bulunmuyor kabul edilir\n  ```\n\n#### 4. Hata: `role_instruction` değişkeninin tanımlanması eksik\n- **Hata**: `role_instruction` değişkeni, `role_instruction`'ın tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```python\n  system_msg = SYSTEM_PROFILE + (\"\\n[SİSTEM ROLÜ]: \" + role_instruction if role_instruction else \"\")\n  ```\n\n### `models.py` Dosyası\n\n#### 5. Hata: `EMBEDDING_OLLAMA_URL` değişkeninin tanımlanması eksik\n- **Hata**: `EMBEDDING_OLLAMA_URL` değişkeni, `EMBEDDING_OLLAMA_URL`'in tanımlanmadığı durumda hata verecektir.\n- **Düzeltme**:\n  ```python\n  EMBEDDING_OLLAMA_URL = \"http://localhost:11435\"  # Varsayılan URL veya gerçek değer\n  ```\n\n### Genel Özet\n\n1. `static/js/ui.js` dosyasında `marked.parse(accText)` hatalı ve `highlight.js` modülü tanımlanmadığı durumda hata verecektir.\n2. `rag.py` dosyasında `CHROMADB_AVAILABLE` değişkeninin tanımlanması eksik ve `role_instruction` değişkeni tanımlanmamış.\n3. `models.py` dosyasında `EMBEDDING_OLLAMA_URL` değişkeninin tanımlanması eksik.\n\nBu düzeltmeleri yaparak, kodlarınızın daha güvenli ve hata ayıklanabilir olmasını sağlayabilirsiniz. Herhangi bir başka sorun veya hata varsa lütfen bildirin!",
+                    "created": 1789347715421,
+                    "elapsedTime": 71.12,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5-coder:14b",
+                    "role": "assistant",
+                    "route": "AUTO-CODER"
+                }
+            ],
+            "model": "deepseek-r1:7b",
+            "projectName": "C:\\AI_YEREL\\GK_STUDIO_V3",
+            "title": "📂 C:\\AI_YEREL\\GK_STUDIO_V3"
+        }
+    },
+    "currentConvId": null,
+    "nextId": 8
+}

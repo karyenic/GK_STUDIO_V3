@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GK AI STUDYO - v3 MODÜLER</title>
+<style>
+:root{--bg:#0b0b0f;--sidebar:#121215;--panel:#16161c;--text:#f4f4f5;--muted:#a1a1aa;--border:#2a2a32;--accent:#2b6e9e;--user:#1e4a6b;--ai:#1c1c24;--input:#141418;--ok:#065f46;--okt:#a7f3d0;--warn:#b45309;--warnt:#fde68a;--cloud:#1d4ed8;--cloudt:#bfdbfe;--fs:1.08rem}
+body.light-theme{--bg:#f2f2f5;--sidebar:#fff;--panel:#f0f0f3;--text:#1a1a1e;--muted:#5a5a62;--border:#dcdce0;--user:#2b6e9e;--ai:#e8e8ec;--input:#f7f7f9}
+body.dim-theme{--bg:#1a1f26;--sidebar:#14181f;--panel:#222831;--text:#f8fafc;--muted:#cbd5e1;--border:#30363d;--user:#1e4a6b;--ai:#222831;--input:#14181f}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;font-size:var(--fs)}
+body{background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden}
+
+.sidebar{width:400px;min-width:280px;max-width:650px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;z-index:100;transition:width .25s ease,min-width .25s ease,transform .25s ease;resize:horizontal;overflow:auto}
+.sidebar.collapsed{width:0!important;min-width:0!important;max-width:0!important;border-right:none;overflow:hidden;padding:0}
+.sidebar-header{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,#2b6e9e,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff}
+#newChatBtn{margin:4px 14px 10px;padding:12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer;font-size:1.05rem}
+.model-label{margin:10px 14px 4px;font-size:.85rem;color:var(--text);text-transform:uppercase;letter-spacing:.04em;font-weight:800}
+#modelSelect,#roleSelect{margin:0 14px 8px;width:calc(100% - 28px);font-size:1rem;font-weight:600;padding:10px 12px;border-radius:6px;background:var(--panel);border:1px solid var(--border);color:var(--text);cursor:pointer}
+
+.proj-item { margin:6px 14px; padding:10px; background:var(--panel); border:1px solid var(--border); border-radius:6px; display:flex; flex-direction:column; gap:8px; }
+.proj-item.active { border-color:var(--accent); background:#1a3a52; }
+.proj-header { display:flex; justify-content:space-between; align-items:center; }
+.proj-title { font-weight:700; font-size:0.98rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.proj-toolbar { display:flex; gap:6px; justify-content:flex-end; }
+.proj-btn-action { font-size:0.8rem; padding:5px 10px; border:none; border-radius:4px; font-weight:700; cursor:pointer; color:#fff; }
+.proj-btn-action.run { background:#2563eb; }
+.proj-btn-action.idx { background:#059669; }
+.proj-btn-action.del { background:#dc2626; }
+
+.history-list{flex:1;overflow-y:auto;padding:4px 10px 12px}
+.hist-item{padding:12px 14px;margin:6px 0;background:var(--panel);border:1px solid transparent;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:1rem}
+.hist-item.active{background:#1a3a52;border-color:var(--accent)}
+.hist-item.rag-conv-item{border-left:4px solid #3b82f6!important;background:rgba(59,130,246,0.08)!important;}
+.hist-item.rag-conv-item.active{background:#1a3a52!important;border-left:4px solid #60a5fa!important;}
+.hist-item .title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.hist-item .del{background:#dc2626!important;border:none!important;color:#ffffff!important;cursor:pointer;font-size:.85rem;padding:4px 10px;border-radius:5px;flex-shrink:0;font-weight:700;}
+.hist-item .del:hover{background:#b91c1c!important;}
+
+#main{flex:1;display:flex;flex-direction:column;height:100vh;min-width:0}
+
+#topbar{min-height:58px;padding:8px 16px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.topbar-left{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.topbar-center{display:flex;align-items:center;justify-content:center;}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#gpu-indicator{font-size:.88rem;padding:6px 12px;border-radius:6px;background:var(--panel);border:1px solid var(--border);color:#38bdf8;font-weight:750;white-space:nowrap;font-family:monospace;}
+
+.pill{font-size:.82rem;padding:6px 10px;border-radius:6px;font-weight:800;white-space:nowrap}
+.pill.ok{background:#0e3b30;color:var(--okt);border:1px solid #166534}.pill.down{background:#451a1a;color:#ffb4a2;border:1px solid #991b1b}
+#themeToggle,#shutdownBtn{border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-weight:700;font-size:.85rem;white-space:nowrap}
+#themeToggle{background:#5a4a2e;color:#fff}#shutdownBtn{background:#c0392b;color:#fff}
+
+#activeProjectBanner { display:none; background:linear-gradient(135deg, #1e293b, #0f172a); border-bottom:1px solid #2563eb; padding:10px 20px; font-weight:700; color:#93c5fd; font-size:0.95rem; justify-content:flex-start; align-items:center; gap:16px; }
+#activeProjectBanner .exit-btn { background:#dc2626; color:#fff; border:none; padding:5px 12px; border-radius:5px; cursor:pointer; font-size:0.85rem; font-weight:700; }
+#activeProjectBanner .exit-btn:hover { background:#b91c1c; }
+
+#chatBox{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+.msg-wrapper{max-width:85%;display:flex;flex-direction:column}
+.msg-wrapper.user{align-self:flex-end;align-items:flex-end}.msg-wrapper.assistant{align-self:flex-start}
+
+.badge{font-size:.85rem;padding:4px 10px;border-radius:6px;margin-bottom:6px;font-weight:700;width:fit-content}
+.badge-yerel{background:#c2410c!important;color:#ffedd5!important}
+.badge-bulut{background:#1d4ed8!important;color:#bfdbfe!important}
+.badge-skill{background:#b45309!important;color:#fde68a!important}
+.badge-vision{background:#7c3aed!important;color:#ede9fe!important}
+.badge-rag{background:#0284c7!important;color:#e0f2fe!important}
+
+.msg{padding:14px 18px;border-radius:8px;white-space:pre-wrap;word-wrap:break-word;line-height:1.5;font-size:1.05rem;border:1px solid transparent}
+.user .msg{background:var(--user); font-style: italic; font-weight: 600; font-size: 1.15rem; color:#fff;}
+.assistant .msg{background:var(--ai);border-color:var(--border)}
+
+.msg-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;width:100%;}
+.msg-timestamp{font-size:.9rem;color:var(--muted);font-family:monospace;font-weight:600;}
+
+/* YANIT ALTI KOPYALA / İNDİR BUTONLARI */
+.msg-actions{display:flex;gap:6px;}
+.msg-act-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:4px;font-size:0.78rem;font-weight:700;cursor:pointer;}
+.msg-act-btn:hover{background:var(--accent);color:#fff;}
+
+#inputArea{padding:12px 16px 16px;background:var(--sidebar);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
+.tools-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tool-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:6px;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.tool-btn:hover{background:var(--accent);color:#fff;}
+#selectImageBtn{background:#d97706;border-color:#b45309;color:#fff}
+#excelBtn{background:#059669;border-color:#047857;color:#fff}
+#pdfBtn{background:#dc2626;border-color:#b91c1c;color:#fff}
+#txtBtn{background:#2563eb;border-color:#1d4ed8;color:#fff}
+#codeBtn{background:#7c3aed;border-color:#6d28d9;color:#fff}
+#micBtn{background:#0284c7;border-color:#0369a1;color:#fff}
+#folderBtn{background:#0d9488;border-color:#0f766e;color:#fff}
+
+.input-row{display:flex;gap:10px;align-items:stretch}
+#prompt{flex:1;min-height:130px;max-height:260px;padding:14px;border-radius:8px;background:var(--input);border:1px solid var(--border);color:var(--text);font-size:1.15rem;font-style:italic;font-weight:600;resize:vertical;line-height:1.45;}
+#prompt:focus{outline:none;border-color:var(--accent)}
+
+#sendBtn{min-width:100px;padding:0 20px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-weight:800;cursor:pointer;font-size:1.1rem;transition:background-color 0.2s ease;}
+#sendBtn.stop-mode{background:#dc2626!important;}
+#sendBtn.stop-mode:hover{background:#b91c1c!important;}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">GK</div>
+    <div><strong style="font-size:1.15rem">GK AI STUDYO</strong><br><small style="color:var(--muted);font-size:.85rem;font-weight:700">v3 MODÜLER</small></div>
+  </div>
+  <button id="newChatBtn">+ Yeni Sohbet</button>
+
+  <div class="model-label">MODEL LİSTESİ</div>
+  <select id="modelSelect"></select>
+
+  <div class="model-label">ROL (UZMANLIK)</div>
+  <select id="roleSelect">
+    <option value="default">Genel Asistan</option>
+    <option value="coder">Yazılım Mimarı (Coder)</option>
+    <option value="writer">Teknik Yazar (Writer)</option>
+    <option value="analyst">Veri Analisti (Analyst)</option>
+    <option value="engineer">Otomotiv Mühendisi (Engineer)</option>
+  </select>
+
+  <div class="model-label" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>📁 PROJELER (RAG WORKSPACE)</span>
+    <button id="addProjectBtn" style="background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:0.8rem;cursor:pointer;font-weight:bold;">+ Ekle</button>
+  </div>
+  <div id="projectList" style="max-height:200px;overflow-y:auto;"></div>
+
+  <div class="model-label">SOHBET GEÇMİŞİ</div>
+  <div id="history-list" class="history-list"></div>
+</div>
+
+<div id="main">
+  <div id="topbar">
+    <div class="topbar-left">
+      <button id="sidebarToggle" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;">☰</button>
+      <span id="chatTitle" style="font-weight:700;">Sohbet</span>
+    </div>
+    <div class="topbar-center">
+      <span id="currentModelBadge" style="background:var(--panel);padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-weight:700;">Auto · Orkestratör</span>
+    </div>
+    <div class="topbar-right">
+      <div id="statusBar"></div>
+      <span id="gpu-indicator">CPU: %0 | RAM: %0 | GPU: %0</span>
+      <button id="themeToggle">Tema</button>
+      <button id="shutdownBtn">Çıkış</button>
+    </div>
+  </div>
+
+  <div id="activeProjectBanner">
+    <span id="activeProjectBannerLabel">📁 AKTİF WORKSPACE: ---</span>
+    <button class="exit-btn" id="exitWorkspaceBtn">⏹️ Çalışmayı Bitir</button>
+  </div>
+
+  <div id="chatBox"></div>
+
+  <div id="inputArea">
+    <div class="tools-row">
+      <button class="tool-btn" id="selectImageBtn">📷 Görsel</button>
+      <button class="tool-btn" id="excelBtn">📊 Excel</button>
+      <button class="tool-btn" id="pdfBtn">📄 PDF</button>
+      <button class="tool-btn" id="folderBtn">📂 Klasör</button>
+      <button class="tool-btn" id="txtBtn">📝 TXT</button>
+      <button class="tool-btn" id="codeBtn">💻 Kod</button>
+      <button class="tool-btn" id="micBtn">🎤 Ses</button>
+
+      <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
+      <input type="file" id="pdfInput" accept=".pdf" style="display:none">
+      <input type="file" id="folderInput" webkitdirectory multiple style="display:none">
+      <input type="file" id="txtInput" accept=".txt,.md,.json,.log" style="display:none">
+      <input type="file" id="codeInput" accept=".py,.js,.ts,.html,.css,.sql,.cpp,.c,.cs" multiple style="display:none">
+    </div>
+
+    <div id="imagePreview"></div>
+    <div id="packagePreview"></div>
+
+    <div class="input-row">
+      <textarea id="prompt" placeholder="Mesaj yaz... (Auto orkestrasyon devrede)"></textarea>
+      <button id="sendBtn">Gönder</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

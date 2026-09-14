@@ -1,0 +1,82 @@
+{
+    "conversations": {
+        "1": {
+            "created": 1789341952996,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "deepseek-r1:7b",
+            "messages": [
+                {
+                    "content": "r164 merhaba",
+                    "created": 1789341988575,
+                    "role": "user"
+                },
+                {
+                    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+                    "created": 1789341988601,
+                    "elapsedTime": 1.47,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1-64k:latest",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                },
+                {
+                    "content": "r17b merhaba seninle neler yapabiliriz",
+                    "created": 1789342008219,
+                    "role": "user"
+                },
+                {
+                    "content": "Özür dilerim ama ben bir yapay zeka asistanım ve doğrudan etkileşim gerçekleştiremiyorum. Ancak size genel bilgi almak, sorularıza cevap vermek veya sizin için çeşitli işlemler gerçekleştirmek gibi birçok şeyi yapabilirim. Size nasıl yardımcı olabilirim?",
+                    "created": 1789342008225,
+                    "elapsedTime": 5.36,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "qwen2.5:7b",
+            "title": "r164 merhaba"
+        },
+        "2": {
+            "abortCtrl": {},
+            "created": 1789342029752,
+            "isGenerating": true,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "qwen2.5:7b",
+            "messages": [
+                {
+                    "content": "qwen2,57b merhaba seninle neler yapabiliriz",
+                    "created": 1789342046879,
+                    "role": "user"
+                },
+                {
+                    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
+                    "created": 1789342046885,
+                    "elapsedTime": 1.14,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                },
+                {
+                    "content": "bir inceleme daha yapalım : app.py workspace.py indexçhtml ui.js",
+                    "created": 1789346646966,
+                    "role": "user"
+                },
+                {
+                    "content": "Elbette, size sunulan dosyaları inceleyelim. Lütfen belirli bir konuda veya sorunla ilgili daha fazla bilgi verin. Örneğin:\n\n1. İncelemek istediğiniz parçası belirtin.\n2. Belirli bir hata veya beklentiyi belirtin.\n3. Bazı kod bloklarını ayrıntılıca inceleyip açıklamalar yazmamı ister misiniz?\n\nBöylece daha etkili ve özelleştirilmiş bir yanıt verebilirim.",
+                    "created": 1789346646967,
+                    "elapsedTime": 9.64,
+                    "isLiveTimer": false,
+                    "model": "qwen2.5:7b",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "qwen2.5:7b",
+            "title": "qwen2,57b merhaba seninle..."
+        }
+    },
+    "currentConvId": null,
+    "nextId": 8
+}
