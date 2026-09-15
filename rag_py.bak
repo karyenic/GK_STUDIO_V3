@@ -24,7 +24,7 @@ def _safe_collection_name(proj_name):
     safe = "proj_" + safe if safe else "proj_default"
     return safe[:63]
 
-def _chunk_text(text, chunk_size=900, overlap=150):
+def _chunk_text(text, chunk_size=500, overlap=100):
     chunks = []
     start = 0
     n = len(text)

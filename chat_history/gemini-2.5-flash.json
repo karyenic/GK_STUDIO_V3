@@ -1,0 +1,31 @@
+{
+    "conversations": {
+        "51": {
+            "abortCtrl": {},
+            "created": 1789468120521,
+            "isGenerating": true,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "gemini-2.5-flash",
+            "messages": [
+                {
+                    "content": "merhaba oradamısın",
+                    "created": 1789468130151,
+                    "role": "user"
+                },
+                {
+                    "content": "Merhaba! Evet, buradayım. Size nasıl yardımcı olabilirim?",
+                    "created": 1789468130155,
+                    "elapsedTime": 1.24,
+                    "isLiveTimer": false,
+                    "model": "gemini-2.5-flash",
+                    "role": "assistant",
+                    "route": "DIRECT"
+                }
+            ],
+            "model": "gemini-2.5-flash",
+            "title": "merhaba oradamısın"
+        }
+    },
+    "currentConvId": null,
+    "nextId": 61
+}

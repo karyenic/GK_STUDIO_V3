@@ -1,21 +1,21 @@
 {
     "conversations": {
-        "15": {
-            "abortCtrl": {},
-            "created": 1789417812177,
-            "isGenerating": true,
+        "37": {
+            "abortCtrl": null,
+            "created": 1789423625240,
+            "isGenerating": false,
             "lastRoute": "DIRECT",
             "lastUsedModel": "qwen2.5-64k:latest",
             "messages": [
                 {
-                    "content": "qwen  64 merhaba",
-                    "created": 1789417824526,
+                    "content": "64 k nasılsın",
+                    "created": 1789423640109,
                     "role": "user"
                 },
                 {
-                    "content": "Merhaba! Size nasıl yardımcı olabilirim?",
-                    "created": 1789417824529,
-                    "elapsedTime": 1.62,
+                    "content": "Öğrenciyim ve bu yüzden bu soruyla ilgili bir şey anlayamıyorum. Size nasıl yardımcı olabilirim?",
+                    "created": 1789423640113,
+                    "elapsedTime": 2.28,
                     "isLiveTimer": false,
                     "model": "qwen2.5-64k:latest",
                     "role": "assistant",
@@ -23,9 +23,9 @@
                 }
             ],
             "model": "qwen2.5-64k:latest",
-            "title": "qwen  64 merhaba"
+            "title": "64 k nasılsın"
         }
     },
     "currentConvId": null,
-    "nextId": 20
+    "nextId": 64
 }

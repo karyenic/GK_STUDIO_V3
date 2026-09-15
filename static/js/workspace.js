@@ -101,7 +101,7 @@ export const Workspace = {
           if (!confirm(`"${pName}" projesi silinsin mi?`)) return;
           await API.deleteProject(pName);
           if (State.activeProjectName === pName) this.exitProject(onRender);
-          this.refreshProjectList(onReger = onRender);
+          this.refreshProjectList(onRender);
         };
 
         toolbar.appendChild(runBtn);

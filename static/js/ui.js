@@ -48,6 +48,7 @@ export const UI = {
     this.applyTheme();
     this.initEvents();
     this.initSpeech();
+    this.initStopButton();
 
     API.getModels().then(d => this.populateModels(d)).catch(() => this.populateModels({}));
     this.updateStatus();
@@ -260,6 +261,9 @@ export const UI = {
 
     this.chatBox.innerHTML = '';
     this.updateTopBadge(conv);
+    // Paket rozeti sohbete bagli oldugu icin her render'da tazeleniyor -
+    // boylece sohbetler arasi gecis yapildiginda dogru paket gosterilir.
+    this.renderAttachedPackageBadge();
 
     (conv.messages || []).forEach(m => {
       const wrap = document.createElement('div');
@@ -308,17 +312,6 @@ export const UI = {
           setTimeout(() => copyBtn.textContent = '📋 Kopyala', 2000);
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'msg-act-btn';
-        delBtn.textContent = '🗑 Sil';
-        delBtn.onclick = async () => {
-          const idx = (conv.messages || []).indexOf(m);
-          if (idx < 0) return;
-          conv.messages.splice(idx, 1);
-          State.saveToStorage();
-          await API.saveConversations(State.conversations, State.currentId, State.nextId);
-          this.renderChat();
-        };
         const dlBtn = document.createElement('button');
         dlBtn.className = 'msg-act-btn';
         dlBtn.textContent = '💾 İndir';
@@ -330,8 +323,32 @@ export const UI = {
           a.click();
         };
 
+        const delBtn = document.createElement('button');
+        delBtn.className = 'msg-act-btn';
+        delBtn.textContent = '🗑️ Sil';
+        delBtn.title = 'Bu yanıtı ve onu tetikleyen soruyu sohbetten kaldır';
+        delBtn.onclick = () => {
+          if (!confirm('Bu asistan yanıtı silinsin mi? (Yanıtı tetikleyen sorunuz da kaldırılacak)')) return;
+          const conv = State.conversations[State.currentId];
+          if (!conv) return;
+          const idx = conv.messages.indexOf(m);
+          if (idx === -1) return;
+          // Asistan yanitindan hemen onceki kullanici mesajini da kaldiriyoruz -
+          // yoksa gecmiste cevapsiz bir soru kalir ve model bunu bir sonraki
+          // istekte yanlis yorumlayabilir.
+          if (idx > 0 && conv.messages[idx - 1] && conv.messages[idx - 1].role === 'user') {
+            conv.messages.splice(idx - 1, 2);
+          } else {
+            conv.messages.splice(idx, 1);
+          }
+          API.saveConversations(State.conversations, State.currentId, State.nextId).catch(() => {});
+          this.renderChat();
+          this.renderHistory();
+        };
+
         actions.appendChild(copyBtn);
         actions.appendChild(dlBtn);
+        actions.appendChild(delBtn);
         footer.appendChild(actions);
       }
 
@@ -371,27 +388,73 @@ export const UI = {
 
   setFilePackage(label, textContent) {
     State.currentFilePackage = textContent;
-    this.packagePreview.innerHTML = `<span>📁 <strong>${label}</strong> pakete alındı.</span><button style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-left:8px;" id="removePkgBtn">Kaldır</button>`;
+    State.currentFilePackageLabel = label;
+    const conv = State.conversations[State.currentId];
+    if (conv) {
+      conv.attachedPackage = textContent;
+      conv.attachedPackageLabel = label;
+    }
+    this.renderAttachedPackageBadge();
+  },
+
+  renderAttachedPackageBadge() {
+    // Sohbete bagli paketin KALICI gostergesi. Onceden paket gonderildikten
+    // sonra rozet kayboluyordu ve kullanici klasorun hala ekli olup
+    // olmadigini bilemiyordu - "klasor bilgisi balonu gorunmuyor"
+    // sikayetinin sebebi buydu.
+    const conv = State.conversations[State.currentId];
+    const label = conv && conv.attachedPackageLabel;
+    if (!label) {
+      this.packagePreview.innerHTML = '';
+      this.packagePreview.style.display = 'none';
+      return;
+    }
+    const size = conv.attachedPackage ? Math.round(conv.attachedPackage.length / 1024) : 0;
+    this.packagePreview.innerHTML = `<span>📁 <strong>${label}</strong> bu sohbete ekli (${size} KB) — her mesajda kullanılıyor.</span><button style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-left:8px;" id="removePkgBtn">Kaldır</button>`;
     this.packagePreview.style.display = 'flex';
     document.getElementById('removePkgBtn').onclick = () => {
+      if (conv) {
+        conv.attachedPackage = null;
+        conv.attachedPackageLabel = null;
+      }
       State.currentFilePackage = null;
+      State.currentFilePackageLabel = null;
       this.packagePreview.innerHTML = '';
       this.packagePreview.style.display = 'none';
     };
   },
 
   setSendBtnState(isGenerating) {
-    // Gonder her zaman mavi kalir. DUR ayri kontrol olarak yalnizca uretim sirasinda aktif olur.
-    if (this.sendBtn) {
-      this.sendBtn.textContent = 'Gönder';
-      this.sendBtn.classList.remove('stop-mode');
+    // ONEMLI DUZELTME: Onceden "DUR" islevi Gonder butonunun ICINE
+    // gomulmustu (buton metni degisiyordu) - kullanicilar araç
+    // cubugundaki ayri DUR butonunu ariyordu. Artik arac cubugunda
+    // GERCEK, calisan bir DUR butonu var; Gonder butonu sadece
+    // devre disi kaliyor.
+    const stopBtn = document.getElementById('stopBtn');
+    if (isGenerating) {
+      this.sendBtn.textContent = "Üretiliyor...";
+      this.sendBtn.disabled = true;
+      this.sendBtn.classList.add("stop-mode");
+      if (stopBtn) stopBtn.style.display = 'inline-block';
+    } else {
+      this.sendBtn.textContent = "Gönder";
       this.sendBtn.disabled = false;
+      this.sendBtn.classList.remove("stop-mode");
+      if (stopBtn) stopBtn.style.display = 'none';
     }
-    if (this.stopBtn) {
-      this.stopBtn.disabled = !isGenerating;
-      this.stopBtn.classList.toggle('active-stop', !!isGenerating);
-      this.stopBtn.title = isGenerating ? 'Devam eden yaniti durdur' : 'Devam eden yanit yok';
-    }
+  },
+
+  initStopButton() {
+    const stopBtn = document.getElementById('stopBtn');
+    if (!stopBtn) return;
+    stopBtn.onclick = () => {
+      const conv = State.conversations[State.currentId];
+      if (conv && conv.abortCtrl) {
+        conv.abortCtrl.abort();  // backend de GeneratorExit ile duruyor (gateway.py)
+      }
+      if (conv) conv.isGenerating = false;
+      this.setSendBtnState(false);
+    };
   },
 
   initSpeech() {
@@ -561,8 +624,13 @@ export const UI = {
 
     this.sendBtn.onclick = () => {
       const conv = State.conversations[State.currentId];
-      if (conv && conv.isGenerating) return;
-      this.handleSend();
+      if (conv && conv.isGenerating && conv.abortCtrl) {
+        conv.abortCtrl.abort();
+        conv.isGenerating = false;
+        this.setSendBtnState(false);
+      } else {
+        this.handleSend();
+      }
     };
 
     this.promptEl.addEventListener('keydown', e => {
@@ -578,7 +646,18 @@ export const UI = {
 
   async handleSend() {
     const text = this.promptEl.value.trim();
-    const pkg = State.currentFilePackage;
+    const conv0 = State.conversations[State.currentId];
+    // ONEMLI DUZELTME: currentFilePackage her mesajdan sonra temizleniyordu,
+    // bu yuzden "Klasor Oku" ile yuklenen icerik SADECE ilk soruda calisiyor,
+    // 2. soruda model dosyalari goremiyordu. Artik paket sohbetin KENDISINE
+    // (conv.attachedPackage) baglaniyor ve o sohbet boyunca kaliyor;
+    // kullanici "Kaldir" diyene veya yeni bir paket yukleyene kadar
+    // her mesajda otomatik olarak gonderiliyor.
+    if (State.currentFilePackage && conv0) {
+      conv0.attachedPackage = State.currentFilePackage;
+      conv0.attachedPackageLabel = State.currentFilePackageLabel || 'Dosya/Klasör Paketi';
+    }
+    const pkg = (conv0 && conv0.attachedPackage) || State.currentFilePackage;
     const imgs = State.currentImages.slice();
 
     if (!text && !imgs.length && !pkg) return;
@@ -608,8 +687,11 @@ export const UI = {
     State.currentImages = [];
     this.imagePreview.innerHTML = '';
     this.imagePreview.style.display = 'none';
+    // Paket ARTIK TEMIZLENMIYOR - sohbete bagli kaliyor (conv.attachedPackage).
+    // Bunun yerine, hangi paketin aktif oldugunu gosteren KALICI bir rozet
+    // gosteriyoruz ki kullanici klasorun hala ekli oldugunu net gorsun.
     State.currentFilePackage = null;
-    this.packagePreview.style.display = 'none';
+    this.renderAttachedPackageBadge();
 
     this.renderChat();
     this.renderHistory();
@@ -633,6 +715,16 @@ export const UI = {
     }, 100);
 
     try {
+      // ONEMLI DUZELTME: proje bilgisi State.activeProjectName'den (GLOBAL,
+      // gecici degisken) aliniyordu. Bu degisken sohbet degistirince veya
+      // sayfa yenilenince sifirlaniyor, dolayisiyla 2. soruda
+      // is_project=false gidiyor ve RAG HIC TETIKLENMIYORDU - "2. soruda
+      // dizini gormuyor" sikayetinin sebebi tam olarak buydu.
+      // conv.projectName ise sohbetin KENDISINDE kalici olarak duruyor
+      // (tipki "Klasor Oku"nun conv.attachedPackage'i gibi - o yuzden
+      // klasor modulunde baglam sürdürülebiliyordu). Once sohbetin kendi
+      // kaydina, yoksa global degiskene bakiyoruz.
+      const effectiveProject = conv.projectName || State.activeProjectName || '';
       const payload = {
         prompt: text,
         model: conv.model || this.modelSelect.value || 'auto',
@@ -640,8 +732,8 @@ export const UI = {
         history: conv.messages.slice(0, -2),
         images: imgs.length ? imgs : undefined,
         filePackage: pkg,
-        is_project: !!State.activeProjectName,
-        project_name: State.activeProjectName || ''
+        is_project: !!effectiveProject,
+        project_name: effectiveProject
       };
 
       const res = await API.chat(payload, conv.abortCtrl.signal);
