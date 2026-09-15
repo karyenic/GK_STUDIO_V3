@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-import json
 from config import CHROMA_DIR, EMBED_MODEL
 from backends.ollama_backend import OllamaBackend
 
@@ -19,9 +18,11 @@ def _chroma_client():
     return chromadb.PersistentClient(path=CHROMA_DIR)
 
 def _safe_collection_name(proj_name):
-    safe = re.sub(r'[^a-zA-Z0-9_-]', '_', proj_name).strip('_-')
-    safe = "proj_" + safe if safe else "proj_default"
-    return safe[:63]
+    """
+    Proje adını temizleyerek her proje için ayrı bir ChromaDB koleksiyonu oluşturur.
+    """
+    safe = re.sub(r'[^a-zA-Z0-9_-]', '_', proj_name or "default").strip('_-')
+    return f"p_{safe}"[:63]
 
 def _chunk_text_smart(text, max_chars=1500, overlap=300):
     if not text:
@@ -66,13 +67,13 @@ def clear_project_index(proj_name):
         client = _chroma_client()
         coll_name = _safe_collection_name(proj_name)
         client.delete_collection(coll_name)
-        print(f"[RAG TEMİZLİK] '{proj_name}' eski indeks önbelleği silindi.")
+        print(f"[RAG TEMİZLİK] '{proj_name}' koleksiyonu silindi.")
     except Exception:
         pass
 
 def index_project_folder(proj_name, proj_path):
     if not CHROMADB_AVAILABLE:
-        return {"status": "error", "message": "chromadb kütüphanesi kurulu değil."}
+        return {"status": "error", "message": "chromadb kurulu değil."}
 
     client = _chroma_client()
     coll_name = _safe_collection_name(proj_name)
@@ -122,10 +123,13 @@ def index_project_folder(proj_name, proj_path):
                 metadatas=metadatas[i:i+batch]
             )
 
-    print(f"[RAG AKILLI İNDEKSLEME] Toplam dosya: {file_count}, Toplam blok chunk: {len(ids)}")
+    print(f"[RAG İNDEKS] Proje: {proj_name} | Dosya: {file_count}, Chunk: {len(ids)}")
     return {"status": "success", "file_count": file_count, "chunk_count": len(ids)}
 
-def rag_query(proj_name, query, k=5):
+def rag_query(proj_name, query, k=3):
+    """
+    Sistemi yormayan, doğrudan ve hızlı vektör arama motoru.
+    """
     if not CHROMADB_AVAILABLE:
         return None
     try:
@@ -144,7 +148,7 @@ def rag_query(proj_name, query, k=5):
         results = collection.query(
             query_embeddings=[query_emb],
             n_results=k,
-            include=["documents", "metadatas", "distances"]
+            include=["documents", "metadatas"]
         )
 
         docs = results.get("documents", [[]])[0]
@@ -157,9 +161,9 @@ def rag_query(proj_name, query, k=5):
         for idx, (doc, meta) in enumerate(zip(docs, metas), 1):
             file_name = meta.get('file', '?')
             chunk_num = meta.get('chunk', '?')
-            parts.append(f"--- DOSYA: {file_name} (blok parça {chunk_num}) ---\n{doc}")
+            parts.append(f"--- DOSYA: {file_name} (blok {chunk_num}) ---\n{doc}")
 
-        return "[PROJE İÇİNDEN RAG İLE SÜZÜLEN İLGİLİ BLOKLAR]:\n" + "\n\n".join(parts)
+        return "[PROJE İÇİNDEN RAG BİLGİLERİ]:\n" + "\n\n".join(parts)
     except Exception as e:
         print(f"[RAG SORGU HATASI]: {e}")
         return None

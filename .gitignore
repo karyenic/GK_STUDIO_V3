@@ -20,3 +20,25 @@ conversations/
 
 # Loglar
 *.log
+# Yedekler ve arşivler
+_backups/
+BACKUPS/
+ARCHIVE/
+*.bak
+*.patch
+
+# Sohbet geçmişleri ve yerel veriler
+chat_history/
+exports/
+excel/
+uploads/
+chroma_db/
+logs/
+
+# Geçici test dosyaları
+*.py
+*.txt
+!config.py
+!rag.py
+!gateway.py
+!app.py

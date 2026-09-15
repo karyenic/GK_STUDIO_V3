@@ -1,9 +1,8 @@
 {
     "conversations": {
         "proj_C:\\AI_YEREL\\GK_STUDIO_V3_1789344473474": {
-            "abortCtrl": {},
             "created": 1789344473474,
-            "isGenerating": true,
+            "isGenerating": false,
             "lastRoute": "DIRECT",
             "lastUsedModel": "qwen2.5-coder:7b",
             "messages": [
@@ -32,5 +31,5 @@
         }
     },
     "currentConvId": null,
-    "nextId": 8
+    "nextId": 57
 }

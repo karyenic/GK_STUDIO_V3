@@ -1,31 +1,49 @@
 {
     "conversations": {
-        "2": {
-            "title": "r164 k merhaba yetenekler...",
-            "model": "deepseek-r1-64k:latest",
-            "created": 1789343722311,
+        "36": {
+            "created": 1789507747540,
+            "isGenerating": false,
+            "lastRoute": "DIRECT",
+            "lastUsedModel": "deepseek-r1-64k:latest",
             "messages": [
                 {
-                    "role": "user",
-                    "content": "r164 k merhaba yeteneklerin nedir",
-                    "created": 1789343750928
+                    "content": "⚡ **\"ENTEGRE_muhasebe_2026\"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır.",
+                    "role": "assistant"
                 },
                 {
-                    "role": "assistant",
-                    "content": "Merhaba! R164 K yazılım mimarisindeki \"Yetenekler\" rolü hakkında belirli bilgi bulunamadım. Bu terim genellikle yazılım geliştirme sürecinde veya sistem tasarımında kullanılan bir konu olabilir, ancak daha spesifik bilgi olmadan kesin bir tanımlama yapmak zordur.\n\nYetenekler genellikle kullanıcı deneyimi (UX), kullanıcı arayüzü (UI), veri işleme, performans ve güvenlik gibi özelliklere atıfta bulunmaktadır. Ancak, belirli bir yazılım mimarisi veya uygulama için \"Yetenekler\" terimi özel olarak tanımlanmış olabilir.\n\nEğer bu terminin R164 K çerçevesinde nasıl kullanıldığını daha ayrıntılı bilgi verebilirseniz, bana yardımcı olabilirim. Başka bir konuda da yardıma ihtiyacınız olursa lütfen bana bildirin.",
+                    "content": "dizin dosya yapısını harita olarak  ver",
+                    "created": 1789507777851,
+                    "role": "user"
+                },
+                {
+                    "content": "Dizin ve dosya yapısı şu şekildedir:\n\n```\n├── README.md\n├── MUHASEBE_MANIFEST.txt\n├── app.py\n├── config.py\n├── gateway.py\n├── models.py\n├── orchestrator.py\n├── rag.py\n├── rag_backup_20260915_221218.py\n├── rag_test_query.py\n├── websearch.py\n├── ARCHIVE\\RAG_BASELINES\\20260915_STABLE_BASELINE\\rag_stable_baseline.py\n├── backends\\gemini_backend.py\n├── backends\\ipex_backend.py\n├── backends\\ollama_backend.py\n└── BACKUPS\\DUR_UI_FIX_20260915_195528\\\n    ├── index.html\n    └── ui.js\n\n1 directory, 16 files\n```",
+                    "created": 1789507777852,
+                    "elapsedTime": 19.67,
                     "isLiveTimer": false,
-                    "created": 1789343750932,
                     "model": "deepseek-r1-64k:latest",
-                    "route": "DIRECT",
-                    "elapsedTime": 13.31
+                    "role": "assistant",
+                    "route": "DIRECT"
+                },
+                {
+                    "content": "bir kez daha incele ve dizin / klasör / dosya başlantılarını harita olarak ver",
+                    "created": 1789507849417,
+                    "role": "user"
+                },
+                {
+                    "content": "Dizin ve dosya yapısı şu şekildedir:\n\n```\n├── README.md\n├── MUHASEBE_MANIFEST.txt\n├── app.py\n├── config.py\n├── gateway.py\n├── models.py\n├── orchestrator.py\n├── rag.py\n├── rag_backup_20260915_221218.py\n├── rag_test_query.py\n├── websearch.py\n├── ARCHIVE\\RAG_BASELINES\\20260915_STABLE_BASELINE\\rag_stable_baseline.py\n├── backends\\gemini_backend.py\n├── backends\\ipex_backend.py\n├── backends\\ollama_backend.py\n└── BACKUPS\\DUR_UI_FIX_20260915_195528\\\n    ├── index.html\n    └── ui.js\n\n1 directory, 16 files\n```",
+                    "created": 1789507849424,
+                    "elapsedTime": 18.11,
+                    "isLiveTimer": false,
+                    "model": "deepseek-r1-64k:latest",
+                    "role": "assistant",
+                    "route": "DIRECT"
                 }
             ],
-            "isGenerating": true,
-            "abortCtrl": {},
-            "lastUsedModel": "deepseek-r1-64k:latest",
-            "lastRoute": "DIRECT"
+            "model": "deepseek-r1-64k:latest",
+            "projectName": "ENTEGRE_muhasebe_2026",
+            "title": "📂 ENTEGRE_muhasebe_2026"
         }
     },
-    "currentConvId": "2",
-    "nextId": 3
+    "currentConvId": null,
+    "nextId": 57
 }

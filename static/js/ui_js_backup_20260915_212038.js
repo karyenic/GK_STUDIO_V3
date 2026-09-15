@@ -249,10 +249,8 @@ export const UI = {
         // Sohbetin üretim durumuna göre Gönder/Dur butonunu esnek hale getir
         if (c.isGenerating) {
           this.setSendBtnState(true);
-    this.setStopBtnState(true);
         } else {
           this.setSendBtnState(false);
-    this.setStopBtnState(false);
         }
       };
       this.historyList.appendChild(div);
@@ -631,7 +629,6 @@ export const UI = {
     conv.isGenerating = true;
     conv.abortCtrl = new AbortController();
     this.setSendBtnState(true);
-    this.setStopBtnState(true);
 
     const tStart = performance.now();
     const liveTimerInterval = setInterval(() => {
@@ -704,8 +701,6 @@ export const UI = {
       conv.isGenerating = false;
       conv.abortCtrl = null;
       this.setSendBtnState(false);
-    this.setStopBtnState(false);
     }
   }
 };
-

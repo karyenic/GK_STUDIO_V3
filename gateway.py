@@ -1,5 +1,6 @@
 # C:\AI_YEREL\GK_STUDIO_V3\gateway.py
 # -*- coding: utf-8 -*-
+import os
 import time
 import json
 from config import SYSTEM_PROFILE, ROLE_PROMPTS, DEFAULT_LOCAL_MODEL
@@ -8,6 +9,20 @@ from backends.ipex_backend import IPEXBackend
 from backends.gemini_backend import GeminiBackend
 from rag import rag_query
 from websearch import perform_web_search
+
+def get_project_file_tree(base_dir="."):
+    """Proje klasöründeki kod dosyalarını tarayıp kompakt bir harita çıkarır."""
+    allowed_exts = ('.py', '.js', '.html', '.css')
+    tree_lines = []
+    
+    for root, dirs, files in os.walk(base_dir):
+        dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'venv', 'env', 'node_modules']]
+        for file in files:
+            if file.endswith(allowed_exts):
+                rel_path = os.path.relpath(os.path.join(root, file), base_dir)
+                tree_lines.append(f"📂 {rel_path}")
+                
+    return "\n".join(tree_lines)
 
 class AIGateway:
     @staticmethod
@@ -51,45 +66,63 @@ class AIGateway:
             prompt = f"[CANLI WEB VERİLERİ]:\n{web_context}\n\n[SORGUNUZ]:\n{prompt}"
         t_web = round(time.time() - t_web_start, 3)
 
-        # 3. RAG Vektör Arama Katmanı
+        # 3. RAG Vektör Arama ve Proje Haritası Katmanı
         t_rag_start = time.time()
         rag_context = ""
-        if is_project and project_name:
-            rag_context = rag_query(project_name, prompt, k=3) or ""
+        project_tree = ""
+        
+        if is_project:
+            project_tree = get_project_file_tree(".")
+            if project_name:
+                rag_context = rag_query(project_name, prompt, k=3) or ""
         t_rag = round(time.time() - t_rag_start, 3)
 
-        # 4. MANUEL DOSYA/KLASÖR PAKETİ İLE RAG BAĞLAMININ NET AYRIŞTIRILMASI
+        # 4. MANUEL DOSYA, PROJE HARİTASI VE RAG BAĞLAMININ BİRLEŞTİRİLMESİ
         context_blocks = []
         
+        if project_tree:
+            context_blocks.append(f"[PROJE DOSYA HARİTASI]:\n{project_tree}")
+            
         if file_package:
             context_blocks.append(f"[GEÇİCİ YÜKLENEN DOSYA / KLASÖR PAKETİ]:\n{file_package}")
             
         if rag_context:
             context_blocks.append(f"{rag_context}")
 
+        has_context = False
         if context_blocks:
+            has_context = True
             full_context_text = "\n\n".join(context_blocks)
             hard_cap_chars = 25000
             
             if len(full_context_text) > hard_cap_chars:
-                # Sınırdan geriye doğru giderek ilk satır sonunu (\n) bulur
                 last_safe_cut = full_context_text.rfind('\n', 0, hard_cap_chars)
-                
-                # Eğer devasa tek bir satırsa (örn. minified kod), boşluk arar
                 if last_safe_cut == -1:
                     last_safe_cut = full_context_text.rfind(' ', 0, hard_cap_chars)
-                    # O da yoksa mecbur tam karakterden keser
                     if last_safe_cut == -1:
                         last_safe_cut = hard_cap_chars
                         
-                full_context_text = full_context_text[:last_safe_cut] + "\n\n[!! Akıllı Parçalama: Token sınırına ulaşıldı, bağlam metni satır bütünlüğü korunarak kırpıldı !!]"
+                full_context_text = full_context_text[:last_safe_cut] + "\n\n[!! Akıllı Parçalama: Token sınırına ulaşıldı, bağlam satır bütünlüğü korunarak kırpıldı !!]"
 
-            prompt_instruction = prompt if prompt else "Yüklenen içerikleri ve RAG bağlamını inceleyip detaylı Türkçe analiz yap."
+            prompt_instruction = prompt if prompt else "Yüklenen içerikleri ve proje haritasını inceleyip detaylı Türkçe analiz yap."
             prompt = f"{full_context_text}\n\n[KULLANICI TALİMATI]:\n{prompt_instruction}"
 
-        # 5. Sistem Profili ve Rol Entegrasyonu
+        # 5. Sistem Profili, Rol Entegrasyonu ve Master Prompt Anayasası
         role_instruction = ROLE_PROMPTS.get(role, "")
         system_msg = SYSTEM_PROFILE + ("\n[SİSTEM ROLÜ]: " + role_instruction if role_instruction else "")
+
+        if has_context or is_project:
+            strict_coder_constitution = (
+                "\n\n[SYSTEM_ROLE: STRICT_CODE_ANALYST_AND_SKILLS_MASTER]\n"
+                "Kuralların kesinlikle bağlayıcıdır:\n"
+                "1. Asla Hayal Kurma (No Hallucination): Sadece sana sunulan Proje Dosya Haritasında, RAG bağlamında (--- DOSYA: ... ---) veya "
+                "yüklenen dosya paketinde var olan gerçek kodları ve verileri kaynak al. Bağlamda olmayan dosyalar veya "
+                "fonksiyonlar için asla varsayımda bulunma veya ezberden kod uydurma.\n"
+                "2. Blok Bütünlüğü: Kod incelemelerini ve düzeltmelerini satır bazlı kopukluklar yerine fonksiyon ve blok sınırlarına "
+                "(\\n\\n) dikkat ederek bütüncül yap.\n"
+                "3. Nokta Atışı Çözüm: Sadece somut hatalara odaklan, gerekçelendirilmemiş veya varsayıma dayalı çözümler üretme."
+            )
+            system_msg += strict_coder_constitution
 
         # 6. Dinamik Context Hesaplama
         total_input_chars = len(prompt) + sum(len(h.get("content", "")) for h in history)

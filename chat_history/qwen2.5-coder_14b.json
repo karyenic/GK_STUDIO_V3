@@ -1,9 +1,8 @@
 {
     "conversations": {
         "proj_ENTEGRE_muhasebe_2026_1789345520478": {
-            "abortCtrl": {},
             "created": 1789345520478,
-            "isGenerating": true,
+            "isGenerating": false,
             "lastRoute": "DIRECT",
             "lastUsedModel": "qwen2.5-coder:14b",
             "messages": [
@@ -32,5 +31,5 @@
         }
     },
     "currentConvId": null,
-    "nextId": 8
+    "nextId": 57
 }
