@@ -1,4 +1,3 @@
-# C:\AI_YEREL\GK_STUDIO_V3\rag.py
 # -*- coding: utf-8 -*-
 import os
 import re
@@ -24,22 +23,43 @@ def _safe_collection_name(proj_name):
     safe = "proj_" + safe if safe else "proj_default"
     return safe[:63]
 
-def _chunk_text(text, chunk_size=900, overlap=150):
+def _chunk_text_smart(text, max_chars=1500, overlap=300):
+    if not text:
+        return []
+    raw_blocks = text.split('\n\n')
     chunks = []
-    start = 0
-    n = len(text)
-    while start < n:
-        end = min(start + chunk_size, n)
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-        if end >= n:
-            break
-        start = end - overlap
-    return chunks
+    current_chunk = ""
+
+    for block in raw_blocks:
+        block = block.strip()
+        if not block:
+            continue
+        if len(block) > max_chars:
+            lines = block.split('\n')
+            sub_chunk = ""
+            for line in lines:
+                if len(sub_chunk) + len(line) + 1 <= max_chars:
+                    sub_chunk += ("\n" if sub_chunk else "") + line
+                else:
+                    if sub_chunk:
+                        chunks.append(sub_chunk.strip())
+                    sub_chunk = line
+            if sub_chunk:
+                chunks.append(sub_chunk.strip())
+        else:
+            if len(current_chunk) + len(block) + 2 <= max_chars:
+                current_chunk += ("\n\n" if current_chunk else "") + block
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = block
+
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+        
+    return [c for c in chunks if c]
 
 def clear_project_index(proj_name):
-    """Proje silindiğinde veya yeniden eklendiğinde eski Vektör DB hafızasını temizler."""
     if not CHROMADB_AVAILABLE:
         return
     try:
@@ -51,7 +71,6 @@ def clear_project_index(proj_name):
         pass
 
 def index_project_folder(proj_name, proj_path):
-    """Proje klasörünü tarar, parçalar ve Port 11435 üzerinden ChromaDB'ye indeksler."""
     if not CHROMADB_AVAILABLE:
         return {"status": "error", "message": "chromadb kütüphanesi kurulu değil."}
 
@@ -65,10 +84,10 @@ def index_project_folder(proj_name, proj_path):
     file_count = 0
 
     for root, dirs, files in os.walk(proj_path):
-        dirs[:] = [d for d in dirs if d not in ['.git', 'venv', '__pycache__', 'node_modules', 'chat_history', 'conversations', 'exports', 'excel', 'uploads', 'chroma_db', 'logs']]
+        dirs[:] = [d for d in dirs if d not in ['.git', 'venv', '__pycache__', 'node_modules', 'chat_history', 'conversations', 'exports', 'excel', 'uploads', 'chroma_db', 'logs', '_backups', 'ARCHIVE']]
         for file in files:
             lower_f = file.lower()
-            if lower_f.endswith(('.png', '.jpg', '.jpeg', '.zip', '.exe', '.pyc', '.xlsx', '.pdf', '.ico', '.db')):
+            if lower_f.endswith(('.png', '.jpg', '.jpeg', '.zip', '.exe', '.pyc', '.xlsx', '.pdf', '.ico', '.db', '.bak', '.patch')):
                 continue
             file_full_path = os.path.join(root, file)
             rel_path = os.path.relpath(file_full_path, proj_path)
@@ -81,18 +100,20 @@ def index_project_folder(proj_name, proj_path):
                 continue
 
             file_count += 1
-            for i, chunk in enumerate(_chunk_text(content)):
+            for i, chunk in enumerate(_chunk_text_smart(content)):
                 try:
                     emb = OllamaBackend.get_embedding(chunk)
+                    if not emb:
+                        continue
                     ids.append(f"{rel_path}::{i}")
                     embeddings.append(emb)
                     documents.append(chunk)
                     metadatas.append({"file": rel_path, "chunk": i})
-                except Exception as e:
-                    return {"status": "error", "message": f"Embedding hatası ({rel_path}): {e}"}
+                except Exception:
+                    pass
 
     if ids:
-        batch = 100
+        batch = 50
         for i in range(0, len(ids), batch):
             collection.add(
                 ids=ids[i:i+batch],
@@ -101,9 +122,10 @@ def index_project_folder(proj_name, proj_path):
                 metadatas=metadatas[i:i+batch]
             )
 
+    print(f"[RAG AKILLI İNDEKSLEME] Toplam dosya: {file_count}, Toplam blok chunk: {len(ids)}")
     return {"status": "success", "file_count": file_count, "chunk_count": len(ids)}
 
-def rag_query(proj_name, query, k=3):
+def rag_query(proj_name, query, k=5):
     if not CHROMADB_AVAILABLE:
         return None
     try:
@@ -116,6 +138,8 @@ def rag_query(proj_name, query, k=3):
 
         search_query = f"search_query: {query}" if "nomic" in EMBED_MODEL.lower() else query
         query_emb = OllamaBackend.get_embedding(search_query)
+        if not query_emb:
+            return None
 
         results = collection.query(
             query_embeddings=[query_emb],
@@ -133,9 +157,9 @@ def rag_query(proj_name, query, k=3):
         for idx, (doc, meta) in enumerate(zip(docs, metas), 1):
             file_name = meta.get('file', '?')
             chunk_num = meta.get('chunk', '?')
-            parts.append(f"--- DOSYA: {file_name} (parça {chunk_num}) ---\n{doc}")
+            parts.append(f"--- DOSYA: {file_name} (blok parça {chunk_num}) ---\n{doc}")
 
-        return "[PROJE İÇİNDEN RAG İLE SÜZÜLEN İLGİLİ PARÇALAR]:\n" + "\n\n".join(parts)
+        return "[PROJE İÇİNDEN RAG İLE SÜZÜLEN İLGİLİ BLOKLAR]:\n" + "\n\n".join(parts)
     except Exception as e:
         print(f"[RAG SORGU HATASI]: {e}")
         return None
