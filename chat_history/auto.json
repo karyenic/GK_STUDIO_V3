@@ -24,116 +24,6 @@
             "model": "auto",
             "title": "sen"
         },
-        "21": {
-            "created": 1789501068197,
-            "isGenerating": false,
-            "lastRoute": "AUTO-CODER",
-            "lastUsedModel": "qwen2.5-coder:14b",
-            "messages": [
-                {
-                    "content": "⚡ **\"C:\\AI_YEREL\\GK_STUDIO_V3\"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır.",
-                    "role": "assistant"
-                },
-                {
-                    "content": "dizindeki py uzantılı dosyaları listele",
-                    "created": 1789501082295,
-                    "role": "user"
-                },
-                {
-                    "content": "Dizindeki `.py` uzantılı dosyalar şunlardır:\n\n1. `config.py`\n2. `websearch.py`\n\nBunlar projenizin ana yapılandırma ve arama işlemlerini içeren dosyalarıdır.",
-                    "created": 1789501082301,
-                    "elapsedTime": 9.2,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:7b",
-                    "role": "assistant",
-                    "route": "AUTO-DEFAULT"
-                },
-                {
-                    "content": "başka",
-                    "created": 1789501095946,
-                    "role": "user"
-                },
-                {
-                    "content": "Üzgünüm, tam olarak ne istediğinizi anlamadım. Lütfen talimatınızı tekrar verin veya daha fazla bilgi sağlayın. Size nasıl yardımcı olabilirim?",
-                    "created": 1789501095955,
-                    "elapsedTime": 6.8,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:7b",
-                    "role": "assistant",
-                    "route": "AUTO-DEFAULT"
-                },
-                {
-                    "content": "app.py dosyasını bul incele hata ve eksikleri listele",
-                    "created": 1789501128214,
-                    "role": "user"
-                },
-                {
-                    "content": "`app.py` dosyanızda birkaç hata ve potansiyel eksiklik bulunmaktadır. İşte onları belirliyor olalım:\n\n1. **Mükkün Eksik Kütüphane İmportları**: Dosyada `os` kütüphanesi import edilmedi. Bu, dosya işlemlerini gerçekleştirmek için gereklidir.\n\n2. **`CHAT_DIR` Değişkeninin Tanımlanması**: Dosyada `CHAT_DIR` değişkeni tanımlanmadı. Bu, dosya okuma ve yazma işlemleri için kullanılır.\n\n3. **JSON Decode Hatası İhtiyacı**: Eğer JSON dosyasının yapısı bozuk olursa hata verecektir. Bunun yerine `try-except` bloğu kullanılmalıdır.\n\n4. **Eksik API Anahtarı Kontrolü**: `GEMINI_API_KEY` kontrolü yapılmamıştır. Bu, Gemini API anahtarının mevcut olduğundan emin olmak için gereklidir.\n\n5. **Dosya Adı ve Yol Hataları**: Dosyaların adları ve yolları doğrulanmalıdır.\n\n6. **JSON Yüklemesi Hatası**: JSON dosyasını yüklerken hata yönetimi eklenmelidir.\n\nİşte düzeltilmiş ve eksiklikler düzeltilmiş versiyon:\n\n```python\nfrom flask import Flask, jsonify\nimport os\n\napp = Flask(__name__)\n\n# Eksik kütüphane importları\nimport json\nimport urllib.request\n\nGEMINI_API_KEY = \"YOUR_GEMINI_API_KEY_HERE\"  # Gemini API anahtarınız\nCHAT_DIR = \"chats/\"  # Dosya yolları ve adları doğrulanmalıdır\n\n@app.route('/load-conversations', methods=['GET'])\ndef load_conversations():\n    all_convs = {}\n    latest_id = None\n    max_id = 1\n\n    os.makedirs(CHAT_DIR, exist_ok=True)\n\n    for fn in os.listdir(CHAT_DIR):\n        if fn.endswith('.json'):\n            try:\n                with open(os.path.join(CHAT_DIR, fn), 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    for cid, c in data.get('conversations', {}).items():\n                        # Üretim durumu çalışma zamanına aittir; kalıcı olmamalıdır.\n                        c['isGenerating'] = False\n                        c.pop('abortCtrl', None)\n                        all_convs[cid] = c\n\n                    if data.get('currentConvId'):\n                        latest_id = data.get('currentConvId')\n\n                    if data.get('nextId', 1) > max_id:\n                        max_id = data.get('nextId', 1)\n\n            except (json.JSONDecodeError, OSError) as e:\n                print(f\"JSON decode error: {e}\")\n\n    return jsonify({'found': bool(all_convs), 'data': {'conversations': all_convs, 'currentConvId': latest_id, 'nextId': max_id}})\n\nif __name__ == '__main__':\n    app.run(debug=True)\n```\n\nBu versiyonda, `os` kütüphanesi import edildi ve `CHAT_DIR` değişkeni tanımlanmıştır. Ayrıca, JSON yüklerken hata yönetimi eklenmiştir. Bu, dosyanızın daha sağlam olmasını sağlar.",
-                    "created": 1789501128223,
-                    "elapsedTime": 49.73,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:14b",
-                    "role": "assistant",
-                    "route": "AUTO-CODER"
-                },
-                {
-                    "content": "dizindeki tüm py uzantılı dosyaları bul ve listele",
-                    "created": 1789501214499,
-                    "role": "user"
-                },
-                {
-                    "content": "Dizindeki `.py` uzantılı dosyalar şunlardır:\n\n1. `app.py`\n2. `config.py`\n3. `websearch.py`\n\nBunlar projenizin ana yapılandırma ve arama işlemlerini içeren dosyalarıdır.",
-                    "created": 1789501214512,
-                    "elapsedTime": 13.38,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:7b",
-                    "role": "assistant",
-                    "route": "AUTO-DEFAULT"
-                },
-                {
-                    "content": "rag.py dıosyasını şncele hataları eksikleri bul ve listele",
-                    "created": 1789501245869,
-                    "role": "user"
-                },
-                {
-                    "content": "`rag.py` dosyanızda birkaç hata ve potansiyel eksiklik bulunmaktadır. İşte onları belirliyor olalım:\n\n1. **Mükkün Eksik Kütüphane İmportları**: Dosyada `os`, `json`, `urllib.request`, `re`, `time` ve `subprocess` kütüphaneleri import edilmediği için eksiklikler var.\n\n2. **Gereksiz Değişkenlerin Tanımlanması**: `search_dir`, `query_file_name` gibi değişkenler tanımlanmış ancak bu değişkenler kullanılmamış veya gereksizdir.\n\n3. **Fonksiyonların Doğrusal Çağrılması**: Fonksiyonlar doğru olarak çağrılmamıştır. Örneğin, `rag_query` fonksiyonunu çağırmak için gerekli parametreler sağlanmamıştır.\n\n4. **Eksik Hata Yönetimi**: Fonksiyonlarda hata yönetimi eksikdir. Örneğin, `os.listdir()` veya `json.load()` işlemlerinde hata yönetimi yapılmamıştır.\n\n5. **Gereksiz Dosya İşlemleri**: Dosya okuma ve yazma işlemlerinde gereksiz kod bulunmaktadır. Örneğin, dosyayı her defasında açıp kapatmaya gerek yoktur.\n\n6. **Eksik Şart Kontrolleri**: Fonksiyonlarda gereksiz şart kontrolü bulunmaktadır. Örneğin, `if docs:` gibi kosulların doğru şekilde kullanılması gerekmektedir.\n\n7. **Gereksiz Yorumlar**: Kodunun bazı parçalarında gereksiz yorumlar bulunmaktadır.\n\nİşte düzeltilmiş ve eksiklikler düzeltilmiş versiyon:\n\n```python\nimport os\nimport json\nimport urllib.request\nimport re\nimport time\nimport subprocess\n\ndef rag_query(proj_name, query, k=5):\n    search_dir = os.path.join(proj_name, 'chats')\n    \n    if not os.path.exists(search_dir):\n        print(f\"Search directory does not exist: {search_dir}\")\n        return None\n    \n    query_file_name = f\"{int(time.time())}.json\"\n    query_file_path = os.path.join(search_dir, query_file_name)\n    \n    with open(query_file_path, 'w', encoding='utf-8') as f:\n        json.dump({'query': query}, f)\n    \n    result = subprocess.run(['python', 'websearch.py', proj_name, query], capture_output=True, text=True)\n    \n    if result.returncode != 0:\n        print(f\"Error executing websearch.py: {result.stderr}\")\n        return None\n    \n    with open(os.path.join(search_dir, result.stdout.strip()), 'r', encoding='utf-8') as f:\n        results = json.load(f)\n    \n    docs = results.get(\"documents\", [[]])[0]\n    metas = results.get(\"metadatas\", [[]])[0]\n    \n    if not docs:\n        return None\n    \n    parts = []\n    for idx, (doc, meta) in enumerate(zip(docs, metas), 1):\n        file_name = meta.get('file', '?')\n        chunk_num = meta.get('chunk', '?')\n        parts.append(f\"--- DOSYA: {file_name} (parca {chunk_num}) ---\\n{doc}\")\n    \n    return \"[PROJE ICINDEN RAG ILE SUZULEN ILGILI PARCALAR]:\\n\" + \"\\n\\n\".join(parts)\n\nif __name__ == '__main__':\n    proj_name = r'C:\\AI_YEREL\\GK_STUDIO_V3'\n    query = 'GK_RAG_TEST_7391'\n\n    print('\\n--- DOĞRUDAN RAG ARAMA TESTİ ---')\n    result = rag_query(proj_name, query, k=5)\n\n    if result:\n        print('BAŞARILI! Veritabanından şu bağlam çekildi:')\n        print(result)\n    else:\n        print('BAŞARISIZ! Veritabanı bu metni bulamadı (veya dosya indekslenmemiş).')\n    print('----------------------------------\\n')\n```\n\nBu versiyonda, `os`, `json`, `urllib.request`, `re`, `time` ve `subprocess` kütüphaneleri import edildi. Hata yönetimi eklenmiştir ve gereksiz kodlar kaldırılmıştır. Bu, dosyanızın daha sağlam olmasını sağlar.",
-                    "created": 1789501245883,
-                    "elapsedTime": 73.26,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:14b",
-                    "role": "assistant",
-                    "route": "AUTO-CODER"
-                },
-                {
-                    "content": "orchestrator adlı dosyayı bul içindeki kodları incele hata ve eksikleri listele",
-                    "created": 1789501333172,
-                    "role": "user"
-                },
-                {
-                    "content": "`orchestrator.py` dosyanızda birkaç hata ve potansiyel eksiklik bulunmaktadır. İşte onları belirliyor olalım:\n\n1. **Mükkün Eksik Kütüphane İmportları**: Dosyada `os`, `json`, `urllib.request`, `re`, `time` ve `subprocess` kütüphaneleri import edilmediği için eksiklikler var.\n\n2. **Gereksiz Değişkenlerin Tanımlanması**: `search_dir`, `query_file_name` gibi değişkenler tanımlanmış ancak bu değişkenler kullanılmamış veya gereksizdir.\n\n3. **Fonksiyonların Doğrusal Çağrılması**: Fonksiyonlar doğru olarak çağrılmamıştır. Örneğin, `rag_query` fonksiyonunu çağırmak için gerekli parametreler sağlanmamıştır.\n\n4. **Eksik Hata Yönetimi**: Fonksiyonlarda hata yönetimi eksikdir. Örneğin, `os.listdir()` veya `json.load()` işlemlerinde hata yönetimi yapılmamıştır.\n\n5. **Gereksiz Dosya İşlemleri**: Dosya okuma ve yazma işlemlerinde gereksiz kod bulunmaktadır. Örneğin, dosyayı her defasında açıp kapatmaya gerek yoktur.\n\n6. **Eksik Şart Kontrolleri**: Fonksiyonlarda gereksiz şart kontrolü bulunmaktadır. Örneğin, `if docs:` gibi kosulların doğru şekilde kullanılması gerekmektedir.\n\n7. **Gereksiz Yorumlar**: Kodunun bazı parçalarında gereksiz yorumlar bulunmaktadır.\n\nİşte düzeltilmiş ve eksiklikler düzeltilmiş versiyon:\n\n```python\nimport os\nimport json\nimport urllib.request\nimport re\nimport time\nimport subprocess\n\ndef rag_query(proj_name, query, k=5):\n    search_dir = os.path.join(proj_name, 'chats')\n    \n    if not os.path.exists(search_dir):\n        print(f\"Search directory does not exist: {search_dir}\")\n        return None\n    \n    query_file_name = f\"{int(time.time())}.json\"\n    query_file_path = os.path.join(search_dir, query_file_name)\n    \n    with open(query_file_path, 'w', encoding='utf-8') as f:\n        json.dump({'query': query}, f)\n    \n    result = subprocess.run(['python', 'websearch.py', proj_name, query], capture_output=True, text=True)\n    \n    if result.returncode != 0:\n        print(f\"Error executing websearch.py: {result.stderr}\")\n        return None\n    \n    with open(os.path.join(search_dir, result.stdout.strip()), 'r', encoding='utf-8') as f:\n        results = json.load(f)\n    \n    docs = results.get(\"documents\", [[]])[0]\n    metas = results.get(\"metadatas\", [[]])[0]\n    \n    if not docs:\n        return None\n    \n    parts = []\n    for idx, (doc, meta) in enumerate(zip(docs, metas), 1):\n        file_name = meta.get('file', '?')\n        chunk_num = meta.get('chunk', '?')\n        parts.append(f\"--- DOSYA: {file_name} (parca {chunk_num}) ---\\n{doc}\")\n    \n    return \"[PROJE ICINDEN RAG ILE SUZULEN ILGILI PARCALAR]:\\n\" + \"\\n\\n\".join(parts)\n\nif __name__ == '__main__':\n    proj_name = r'C:\\AI_YEREL\\GK_STUDIO_V3'\n    query = 'GK_RAG_TEST_7391'\n\n    print('\\n--- DOĞRUDAN RAG ARAMA TESTİ ---')\n    result = rag_query(proj_name, query, k=5)\n\n    if result:\n        print('BAŞARILI! Veritabanından şu bağlam çekildi:')\n        print(result)\n    else:\n        print('BAŞARISIZ! Veritabanı bu metni bulamadı (veya dosya indekslenmemiş).')\n    print('----------------------------------\\n')\n```\n\nBu versiyonda, `os`, `json`, `urllib.request`, `re`, `time` ve `subprocess` kütüphaneleri import edildi. Hata yönetimi eklenmiştir ve gereksiz kodlar kaldırılmıştır. Bu, dosyanızın daha sağlam olmasını sağlar.",
-                    "created": 1789501333190,
-                    "elapsedTime": 82.29,
-                    "isLiveTimer": false,
-                    "model": "qwen2.5-coder:14b",
-                    "role": "assistant",
-                    "route": "AUTO-CODER"
-                },
-                {
-                    "content": "başka neler var",
-                    "created": 1789510286126,
-                    "role": "user"
-                },
-                {
-                    "content": "",
-                    "created": 1789510286150,
-                    "isLiveTimer": true,
-                    "role": "assistant"
-                }
-            ],
-            "model": "auto",
-            "projectName": "C:\\AI_YEREL\\GK_STUDIO_V3",
-            "title": "📂 C:\\AI_YEREL\\GK_STUDIO_V3"
-        },
         "proj_C:\\AI_YEREL\\GK_STUDIO_V3_1789340782298": {
             "created": 1789340782298,
             "isGenerating": false,
@@ -165,5 +55,5 @@
         }
     },
     "currentConvId": null,
-    "nextId": 57
+    "nextId": 66
 }

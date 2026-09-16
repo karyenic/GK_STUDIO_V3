@@ -101,7 +101,7 @@ export const Workspace = {
           if (!confirm(`"${pName}" projesi silinsin mi?`)) return;
           await API.deleteProject(pName);
           if (State.activeProjectName === pName) this.exitProject(onRender);
-          this.refreshProjectList(onReger = onRender);
+          this.refreshProjectList(onRender);
         };
 
         toolbar.appendChild(runBtn);
@@ -118,19 +118,38 @@ export const Workspace = {
   activateProject(pName, onRender) {
     State.activeProjectName = pName;
     
-    // Her çalıştırmada temiz, bağımsız ve benzersiz bir ID ile sohbet oluşturur (Tıkanıklığı önler)
-    const id = String(State.nextId++);
+    // Bu projeye ait daha önce açılmış sohbetleri bul
+    const existingIds = Object.keys(State.conversations).filter(id => {
+      const c = State.conversations[id];
+      return c && c.projectName === pName;
+    });
 
-    State.conversations[id] = {
-      title: '📂 ' + pName,
-      projectName: pName,
-      model: document.getElementById('modelSelect')?.value || 'auto',
-      created: Date.now(),
-      isGenerating: false,
-      messages: [{ role: 'assistant', content: `⚡ **"${pName}"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır.` }]
-    };
+    let targetId;
+    if (existingIds.length > 0) {
+      // Varsa en son oluşturulan/kullanılan sohbeti seç ve ekrana getir
+      existingIds.sort((a, b) => (State.conversations[b].created || 0) - (State.conversations[a].created || 0));
+      targetId = existingIds[0];
+      State.currentId = targetId;
+    } else {
+      // Yoksa bu proje için yeni bir sohbet odası aç ve mühürle
+      targetId = String(State.nextId++);
+      State.conversations[targetId] = {
+        title: '📂 ' + pName,
+        projectName: pName,
+        model: document.getElementById('modelSelect')?.value || 'auto',
+        created: Date.now(),
+        isGenerating: false,
+        messages: [{ role: 'assistant', content: `⚡ **"${pName}"** RAG çalışma alanı aktif edildi. Projedeki kod ve dokümanlarınız indeks sorgusuna hazır.` }]
+      };
+      State.currentId = targetId;
+    }
 
-    State.currentId = id;
+    const curConv = State.conversations[targetId];
+    const modelSelectEl = document.getElementById('modelSelect');
+    if (curConv && curConv.model && modelSelectEl) {
+      modelSelectEl.value = curConv.model;
+    }
+
     State.saveToStorage();
     API.saveConversations(State.conversations, State.currentId, State.nextId);
 
