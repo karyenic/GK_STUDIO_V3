@@ -12,6 +12,10 @@ export const State = {
   projectContextSentFor: {},
   currentImages: [],
   currentFilePackage: null,
+  // Web arama durumu sohbet bazlidir; normal sohbetlere karismaz.
+  webActive: false,
+  webTarget: '',
+  webApprovalPending: false,
 
   saveToStorage() {
     try {
