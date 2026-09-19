@@ -116,6 +116,12 @@ export const Workspace = {
   },
 
   activateProject(pName, onRender) {
+    const previousConv = State.conversations[State.currentId];
+    if (previousConv) {
+      previousConv.webActive = false;
+      previousConv.webTarget = '';
+    }
+
     State.activeProjectName = pName;
     
     // Bu projeye ait daha önce açılmış sohbetleri bul
@@ -158,6 +164,11 @@ export const Workspace = {
   },
 
   exitProject(onRender) {
+    const currentConv = State.conversations[State.currentId];
+    if (currentConv) {
+      currentConv.webActive = false;
+      currentConv.webTarget = '';
+    }
     State.activeProjectName = null;
     this.refreshProjectList(onRender);
     if (onRender) onRender();
