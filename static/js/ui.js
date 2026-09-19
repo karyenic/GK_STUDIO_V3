@@ -301,6 +301,11 @@ export const UI = {
       
       // ESKİ SOHBETE TIKLANDIĞINDA TIBBİ DÜZELTME: STATE VE BUTON SENRONİZASYONU
       div.onclick = () => { 
+        const previousConv = State.conversations[State.currentId];
+        if (previousConv && previousConv !== c) {
+          previousConv.webActive = false;
+          previousConv.webTarget = '';
+        }
         State.currentId = id; 
         if (c.projectName) {
           State.activeProjectName = c.projectName;
@@ -668,6 +673,12 @@ export const UI = {
 
     const conv = State.conversations[State.currentId];
     if (!conv) return;
+
+    if (text && conv.webActive) {
+      const newTarget = this.extractWebTarget(text);
+      if (newTarget) conv.webTarget = newTarget;
+      this.updateWebBanner(conv);
+    }
 
     if (text && !conv.webActive && this.needsWebSearch(text)) {
       this.showWebApproval(conv, text);
