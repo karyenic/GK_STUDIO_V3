@@ -36,6 +36,8 @@ class AIGateway:
         images = data.get("images", None)
         file_package = data.get("filePackage", None)
         use_web = data.get("web_search", False)
+        web_target = str(data.get("web_target", "") or "").strip()
+        web_session_context = str(data.get("web_session_context", "") or "")
         is_project = bool(data.get("is_project", False))
         project_name = data.get("project_name", "").strip()
 
@@ -62,7 +64,11 @@ class AIGateway:
         # 2. Web Arama Katmanı
         t_web_start = time.time()
         if use_web:
-            web_context = perform_web_search(prompt)
+            web_context = perform_web_search(
+                prompt,
+                target_url=web_target,
+                session_context=web_session_context,
+            )
             prompt = f"[CANLI WEB VERİLERİ]:\n{web_context}\n\n[SORGUNUZ]:\n{prompt}"
         t_web = round(time.time() - t_web_start, 3)
 
