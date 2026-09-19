@@ -1,48 +1,52 @@
 # C:\AI_YEREL\GK_STUDIO_V3\websearch.py
 # -*- coding: utf-8 -*-
-import json
-import urllib.request
-from config import GEMINI_API_KEY
+"""
+Web arama uyumluluk katmani.
+Gercek arastirma web_research.py icindeki WebResearchAgent tarafindan yapilir.
+"""
+
+import re
+
+from web_research import perform_web_research
+
+
+_URL_RE = re.compile(r"https?://[^\s<>\"']+|www\.[^\s<>\"']+", re.I)
+
+_WEB_KEYWORDS = [
+    "güncel", "guncel", "araştır", "arastir", "internetten", "internet", "web",
+    "siteyi incele", "siteyi araştır", "siteyi arastir", "web üzerinden",
+    "web uzerinden", "son durum", "son haber", "bugün", "bugun", "bu ay",
+    "son ay", "son 6 ay", "son altı ay", "son 12 ay", "fiyat", "fiyatı",
+    "fiyati", "satış", "satis", "satıldı", "satildi", "kaç adet", "kac adet",
+    "istatistik", "veri", "pazar payı", "pazar payi", "ciro", "katalog",
+    "pdf", "kaynak", "karşılaştır", "karsilastir", "incele", "bul", "ara"
+]
+
+
+def extract_web_target(text):
+    match = _URL_RE.search(str(text or ""))
+    if not match:
+        return ""
+    return match.group(0).rstrip(".,);]}>")
+
 
 def needs_web_search(text, has_web_context=False):
-    """Sorgunun canlı web taraması gerektirip gerektirmediğini analiz eder."""
     if has_web_context:
         return False
 
-    p = (text or '').lower()
-    is_explicit_url = any(k in p for k in ['www.', 'http://', 'https://'])
-    keywords = ['güncel', 'araştır', 'merkez bankası', 'tcmb', 'siteyi incele', 'web üzerinden', 'internet', 'fiyatı', 'son durum']
-    
-    return is_explicit_url or any(kw in p for kw in keywords)
+    p = str(text or "").strip().lower()
+    if not p:
+        return False
 
-def perform_web_search(prompt):
-    """Gemini 2.5 Flash Google Search grounding aracını kullanarak canlı web taraması yapar."""
-    if not GEMINI_API_KEY:
-        return "[UYARI: Gemini API anahtarı tanımlı olmadığı için web taraması yapılamadı.]"
+    if _URL_RE.search(p):
+        return True
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-    
-    search_prompt = (
-        f"Lütfen şu hedef web sitesini veya konuyu canlı olarak derinlemesine tara: {prompt}\n\n"
-        "Talimatlar:\n"
-        "1. Sitedeki GERÇEK iletişim bilgilerini (açık adres, telefon numaraları, e-posta) eksiksiz çıkar.\n"
-        "2. Sitede yer alan tüm E-Katalog, PDF, çizim ve indirilebilir dosya bağlantılarını tam URL ile listele.\n"
-        "3. Veri bulamazsan ASLA tahmin yapma; verinin taranan kaynakta yer almadığını açıkça belirt."
+    return any(keyword in p for keyword in _WEB_KEYWORDS)
+
+
+def perform_web_search(prompt, target_url="", session_context=""):
+    return perform_web_research(
+        prompt=prompt,
+        target_url=target_url,
+        session_context=session_context
     )
-
-    payload = {
-        "contents": [{"parts": [{"text": search_prompt}]}],
-        "tools": [{"googleSearch": {}}]
-    }
-
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-
-    try:
-        with urllib.request.urlopen(req, timeout=40) as resp:
-            res_json = json.loads(resp.read().decode("utf-8"))
-            parts = res_json.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-            web_text = "".join([p.get("text", "") for p in parts])
-            return web_text if web_text else "[UYARI: Web aramasından sonuç dönmedi.]"
-    except Exception as e:
-        return f"[UYARI: Web taraması sırasında hata oluştu: {str(e)}]"
