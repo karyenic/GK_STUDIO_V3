@@ -17,6 +17,7 @@ export const UI = {
   imagePreview: null,
   packagePreview: null,
   sidebar: null,
+  webBanner: null,
   recognition: null,
   isListening: false,
   userScrolledUp: false,
@@ -35,6 +36,7 @@ export const UI = {
     this.imagePreview = document.getElementById('imagePreview');
     this.packagePreview = document.getElementById('packagePreview');
     this.sidebar = document.getElementById('sidebar');
+    this.webBanner = document.getElementById('webSearchBanner');
 
     try {
       const backendData = await API.loadConversations();
@@ -149,6 +151,69 @@ export const UI = {
     add('Bulut', d.cloud || []);
   },
 
+  updateWebBanner(conv) {
+    if (!this.webBanner) return;
+    const active = !!(conv && conv.webActive);
+    this.webBanner.style.display = active ? 'flex' : 'none';
+    const target = this.webBanner.querySelector('.web-target');
+    if (target) target.textContent = conv && conv.webTarget ? conv.webTarget : 'Genel web araştırması';
+  },
+
+  extractWebTarget(text) {
+    const m = String(text || '').match(/https?:\/\/[^\s<>"']+|www\.[^\s<>"']+/i);
+    return m ? m[0].replace(/[.,);\]}> ]+$/g, '') : '';
+  },
+
+  needsWebSearch(text) {
+    const p = String(text || '').trim().toLowerCase();
+    if (!p) return false;
+    if (this.extractWebTarget(p)) return true;
+    const keys = [
+      'güncel','guncel','araştır','arastir','internetten','internet','web',
+      'siteyi incele','siteyi araştır','siteyi arastir','son durum',
+      'son 6 ay','son altı ay','fiyat','satış','satis','kaç adet','kac adet',
+      'istatistik','veri','pazar payı','pazar payi','ciro','katalog','pdf',
+      'kaynak','karşılaştır','karsilastir','incele','bul'
+    ];
+    return keys.some(k => p.includes(k));
+  },
+
+  showWebApproval(conv, originalText) {
+    this.chatBox.querySelectorAll('.web-approval').forEach(el => el.remove());
+
+    const box = document.createElement('div');
+    box.className = 'web-approval msg-wrapper assistant';
+    box.innerHTML = '<div class="badge badge-bulut">WEB ARAŞTIRMA</div>' +
+      '<div class="msg">Bu işlem için web araştırması yapılacak.<div style="margin-top:10px;display:flex;gap:8px;">' +
+      '<button class="web-approve-btn">Onay</button>' +
+      '<button class="web-cancel-btn">İptal</button></div></div>';
+
+    box.querySelector('.web-approve-btn').onclick = () => {
+      conv.webActive = true;
+      conv.webTarget = this.extractWebTarget(originalText);
+      this.updateWebBanner(conv);
+      box.remove();
+      this.executeSend(originalText);
+    };
+
+    box.querySelector('.web-cancel-btn').onclick = () => {
+      box.remove();
+      this.executeSend(originalText, false);
+    };
+
+    this.chatBox.appendChild(box);
+    this.chatBox.scrollTop = this.chatBox.scrollHeight;
+  },
+
+  closeWebMode() {
+    const conv = State.conversations[State.currentId];
+    if (!conv) return;
+    conv.webActive = false;
+    conv.webTarget = '';
+    this.updateWebBanner(conv);
+    API.saveConversations(State.conversations, State.currentId, State.nextId);
+  },
+
   updateTopBadge(conv) {
     if (!this.badgeEl) return;
     const selectedInDropdown = this.modelSelect.value || 'auto';
@@ -179,6 +244,7 @@ export const UI = {
     this.renderHistory();
     this.renderChat();
     this.updateTopBadge(State.conversations[id]);
+    this.updateWebBanner(State.conversations[id]);
     this.setSendBtnState(false);
     this.setStopBtnState(false);
   },
@@ -245,6 +311,7 @@ export const UI = {
         this.renderHistory(); 
         this.renderChat(); 
         this.updateTopBadge(c);
+        this.updateWebBanner(c);
 
         // Sohbetin üretim durumuna göre Gönder/Dur butonunu esnek hale getir
         if (c.isGenerating) {
@@ -265,6 +332,7 @@ export const UI = {
 
     this.chatBox.innerHTML = '';
     this.updateTopBadge(conv);
+    this.updateWebBanner(conv);
 
     (conv.messages || []).forEach(m => {
       const wrap = document.createElement('div');
@@ -575,6 +643,11 @@ export const UI = {
       };
     }
 
+    const webCloseBtn = document.getElementById('webSearchCloseBtn');
+    if (webCloseBtn) {
+      webCloseBtn.onclick = () => this.closeWebMode();
+    }
+
     this.promptEl.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { 
         e.preventDefault(); 
@@ -593,6 +666,20 @@ export const UI = {
 
     if (!text && !imgs.length && !pkg) return;
 
+    const conv = State.conversations[State.currentId];
+    if (!conv) return;
+
+    if (text && !conv.webActive && this.needsWebSearch(text)) {
+      this.showWebApproval(conv, text);
+      return;
+    }
+
+    await this.executeSend(text, true, pkg, imgs);
+  },
+
+  async executeSend(text, webApproved = true, pkgOverride = undefined, imgsOverride = undefined) {
+    const pkg = pkgOverride !== undefined ? pkgOverride : State.currentFilePackage;
+    const imgs = imgsOverride !== undefined ? imgsOverride : State.currentImages.slice();
     const conv = State.conversations[State.currentId];
     if (!conv) return;
 
@@ -652,7 +739,10 @@ export const UI = {
         images: imgs.length ? imgs : undefined,
         filePackage: pkg,
         is_project: !!State.activeProjectName,
-        project_name: State.activeProjectName || ''
+        project_name: State.activeProjectName || '',
+        web_search: !!conv.webActive && !!webApproved,
+        web_target: conv.webActive ? (conv.webTarget || '') : '',
+        web_session_context: ''
       };
 
       const res = await API.chat(payload, conv.abortCtrl.signal);
@@ -704,8 +794,7 @@ export const UI = {
       conv.isGenerating = false;
       conv.abortCtrl = null;
       this.setSendBtnState(false);
-    this.setStopBtnState(false);
+      this.setStopBtnState(false);
     }
-  }
-};
+  }};
 
