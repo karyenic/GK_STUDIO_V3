@@ -17,6 +17,7 @@ import urllib.request
 from urllib.parse import urlparse
 
 from config import GEMINI_API_KEY
+from web_guard import apply_web_guard
 
 
 GEMINI_MODEL = "gemini-2.5-flash"
@@ -236,6 +237,8 @@ ARASTIRMA KURALLARI:
 8. Site arastirmasinda resmi site, urun sayfalari, katalog/PDF ve iletisim sayfalarina oncelik ver.
 9. Kullanici tablo veya Excel istiyorsa verileri satir-sutun mantiginda temiz ve dogrulanabilir sekilde cikart.
 10. Buldugun kaynak URL'lerini koru.
+11. Bir veri listesi için kullanilabilir kanit sayisi yetersizse listeyi doldurmak icin tahmin yapma.
+12. Kullanici "ilk N" veya "top N" isterse N sayisina ulasamiyorsan eksik kayitlari acikca belirt.
 {target_note}
 {previous_note}
 """.strip()
@@ -359,15 +362,26 @@ class WebResearchAgent:
                 ""
             ])
 
+        guard_text = apply_web_guard(
+            user_prompt=user_prompt,
+            search_text=search_text,
+            deep_text=deep_text,
+            sources=unique_sources,
+            queries=search_meta["queries"],
+        )
+
         report.extend([
             "[INCELENEN KAYNAKLAR]",
             _format_sources(unique_sources),
+            "",
+            guard_text,
             "",
             "[QWEN ICIN KANIT KURALI]",
             "Bu paket web arastirmasindan elde edilen kanittir. "
             "Kaynakta bulunmayan sayilari veya ayrintilari uydurma. "
             "Veri eksikse eksik oldugunu açıkça soyle. "
-            "Sayisal sonuclari kaynak ve donem bilgisi ile birlikte degerlendir."
+            "Kullanici tarafindan istenen adet kadar dogrulanmis kayit yoksa "
+            "eksik kayitlari kendi hafizandan tamamlama."
         ])
 
         return _clip("\n".join(report), MAX_FINAL_REPORT_CHARS)
