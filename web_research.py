@@ -32,6 +32,63 @@ MAX_SEARCH_TEXT_CHARS = 12000
 MAX_DEEP_TEXT_CHARS = 16000
 MAX_FINAL_REPORT_CHARS = 30000
 REQUEST_TIMEOUT = 60
+SOURCE_RESOLVE_TIMEOUT = 8
+
+
+def _resolve_source_url(url):
+    """Google grounding redirect URL'sini mumkunse asil hedef URL'ye cevirir."""
+    url = str(url or "").strip()
+    if not url:
+        return ""
+
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            return url
+
+        if not parsed.netloc.lower().endswith("vertexaisearch.cloud.google.com"):
+            return url
+
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "GK-Studio-V3-WebResearch/1.0"},
+            method="GET",
+        )
+
+        with urllib.request.urlopen(req, timeout=SOURCE_RESOLVE_TIMEOUT) as resp:
+            final_url = resp.geturl() or url
+            return str(final_url).strip()
+    except Exception:
+        return url
+
+
+def _normalize_sources(sources):
+    """Kaynak listesindeki grounding redirect URL'lerini normalize eder."""
+    normalized = []
+    seen = set()
+
+    for src in sources or []:
+        if not isinstance(src, dict):
+            continue
+
+        raw_url = str(src.get("url") or "").strip()
+        if not raw_url:
+            continue
+
+        final_url = _resolve_source_url(raw_url)
+        key = final_url.lower()
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        normalized.append({
+            "title": str(src.get("title") or "").strip(),
+            "url": final_url,
+            "grounding_url": raw_url if raw_url != final_url else "",
+        })
+
+    return normalized
 
 
 def _clip(text, limit):
@@ -296,9 +353,11 @@ class WebResearchAgent:
         search_text = _extract_text(search_data)
         search_meta = _extract_search_metadata(search_data)
 
+        normalized_search_sources = _normalize_sources(search_meta["sources"])
+
         all_urls = _unique(
             ([target_url] if target_url else [])
-            + [s.get("url") for s in search_meta["sources"]]
+            + [s.get("url") for s in normalized_search_sources]
             + _extract_urls(search_text)
             + _extract_urls(session_context)
         )
@@ -330,14 +389,7 @@ class WebResearchAgent:
                 for u in selected_urls
             ]
 
-        unique_sources = []
-        seen = set()
-        for src in source_records:
-            url = str(src.get("url") or "").strip()
-            if not url or url.lower() in seen:
-                continue
-            seen.add(url.lower())
-            unique_sources.append(src)
+        unique_sources = _normalize_sources(source_records)
 
         report = [
             "[WEB ARASTIRMA RAPORU]",
