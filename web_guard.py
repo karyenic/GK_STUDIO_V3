@@ -66,21 +66,10 @@ def _table_row_count(text):
     return count
 
 
-def _numbered_row_count(text):
-    count = 0
-    for raw in str(text or "").splitlines():
-        line = raw.strip()
-        if re.match(r"^\d+\.[ \t]+\S+", line):
-            if not re.search(
-                r"(?i)^(?:kaynak|source|url|http|https)\b",
-                line
-            ):
-                count += 1
-    return count
-
-
 def observed_rows(text):
-    return max(_table_row_count(text), _numbered_row_count(text))
+    # Sadece acikca markdown tablo satirlarini say.
+    # Serbest metin icindeki 1., 2., 3. gibi numaralar kaynak listesi de olabilir.
+    return _table_row_count(text)
 
 
 def _unique_urls(urls):
