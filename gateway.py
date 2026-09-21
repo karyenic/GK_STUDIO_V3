@@ -117,6 +117,25 @@ class AIGateway:
         role_instruction = ROLE_PROMPTS.get(role, "")
         system_msg = SYSTEM_PROFILE + ("\n[SİSTEM ROLÜ]: " + role_instruction if role_instruction else "")
 
+        if use_web:
+            web_constitution = (
+                "\n\n[SYSTEM_ROLE: WEB_RESEARCH_GUARD]\n"
+                "Web arastirma paketi kanit dosyasi gibi ele alin.\n"
+                "1. Sadece [WEB ARASTIRMA RAPORU], [WEB KAYNAK URL'LERİ] ve "
+                "[WEB GUARD] içinde bulunan verilere dayan.\n"
+                "2. Kullanici bir adet/siralama istediyse, kanit sayisi yetersizse "
+                "eksik kayitlar uydurma; eksigi acikca belirt.\n"
+                "3. Kaynak URL'si olmayan spesifik sayi, tarih, adet, ciro veya "
+                "pazar payini dogrulanmis web verisi gibi sunma.\n"
+                "4. Web arastirma metni ile kendi genel bilgisini karistirma; "
+                "genel bilgi kullanmak gerekiyorsa bunu acikca ayir.\n"
+                "5. Kaynaklar celisiyorsa tek bir degeri secip digerini yok sayma; "
+                "celiskiyi kaynaklariyla belirt.\n"
+                "6. Excel/tablo talebinde yalnizca kanitlanmis satirlari kullan; "
+                "eksik alanlari 'Veri bulunamadi' olarak isaretle."
+            )
+            system_msg += web_constitution
+
         if has_context or is_project:
             strict_coder_constitution = (
                 "\n\n[SYSTEM_ROLE: STRICT_CODE_ANALYST_AND_SKILLS_MASTER]\n"
