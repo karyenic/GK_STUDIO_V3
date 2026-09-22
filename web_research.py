@@ -143,7 +143,7 @@ def _extract_urls(text):
     return _unique(clean)
 
 
-def _gemini_request(prompt, tools):
+def _gemini_request(prompt, tools, preferred_model=None):
     if not GEMINI_API_KEY:
         return {
             "ok": False,
@@ -158,7 +158,12 @@ def _gemini_request(prompt, tools):
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     last_error = None
 
-    for model_index, model in enumerate(GEMINI_WEB_MODELS):
+    model_order = list(GEMINI_WEB_MODELS)
+    if preferred_model in model_order:
+        model_order.remove(preferred_model)
+        model_order.insert(0, preferred_model)
+
+    for model_index, model in enumerate(model_order):
         req = urllib.request.Request(
             _gemini_generate_url(model),
             data=body,
@@ -226,7 +231,7 @@ def _gemini_request(prompt, tools):
                 break
 
         if model_index < len(GEMINI_WEB_MODELS) - 1:
-            next_model = GEMINI_WEB_MODELS[model_index + 1]
+            next_model = model_order[model_index + 1]
             print(
                 f"[WEB MODEL] {model} yerine {next_model} deneniyor."
             )
@@ -443,7 +448,8 @@ class WebResearchAgent:
                 _build_deep_prompt(
                     user_prompt, search_text, selected_urls, target_url
                 ),
-                [{"url_context": {}}]
+                [{"url_context": {}}],
+                preferred_model=first.get("model"),
             )
             if second.get("ok"):
                 second_data = second.get("data") or {}
@@ -462,6 +468,8 @@ class WebResearchAgent:
             ]
 
         unique_sources = _normalize_sources(source_records)
+
+        display_deep_text = strip_embedded_ledger(deep_text)
 
         report = [
             "[WEB ARASTIRMA RAPORU]",
@@ -486,11 +494,7 @@ class WebResearchAgent:
                 "[2. ASAMA - URL CONTEXT DERIN OKUMA]",
                 _clip(display_deep_text, MAX_DEEP_TEXT_CHARS),
                 ""
-            ])
-
-        display_deep_text = strip_embedded_ledger(deep_text)
-
-        evidence_ledger = build_evidence_ledger(
+            ])        evidence_ledger = build_evidence_ledger(
             user_prompt=user_prompt,
             search_text=search_text,
             deep_text=deep_text,
