@@ -328,9 +328,6 @@ ARASTIRMA KURALLARI:
 10. Buldugun kaynak URL'lerini koru.
 11. Bir veri listesi için kullanilabilir kanit sayisi yetersizse listeyi doldurmak icin tahmin yapma.
 12. Kullanici "ilk N" veya "top N" isterse N sayisina ulasamiyorsan eksik kayitlari acikca belirt.
-13. Ikinci asama sonunda mutlaka "[KANIT DEFTERI]" bolumu üret.
-14. Kanit defterinde mümkün olduğunca her spesifik sayi, tarih, marka, adet veya fiyatı tek bir gerçek kaynak URL'sine bağla.
-15. Kaynakta doğrulanmayan bir değeri kanıt defterine koyma.
 {target_note}
 {previous_note}
 """.strip()
@@ -465,6 +462,7 @@ class WebResearchAgent:
         consistency_report = build_consistency_report(
             search_text=search_text,
             deep_text=deep_text,
+            evidence_ledger=evidence_ledger,
         )
 
         guard_text = apply_web_guard(
