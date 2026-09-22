@@ -23,16 +23,12 @@ from web_guard import apply_web_guard
 from web_evidence import build_consistency_report, build_evidence_ledger, format_consistency_report, format_evidence_ledger, strip_embedded_ledger
 
 
-GEMINI_WEB_MODELS = (
-    "gemini-3.5-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-)
+GEMINI_MODEL = "gemini-2.5-flash"
 
-def _gemini_generate_url(model):
+def _gemini_generate_url():
     return (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent"
+        f"{GEMINI_MODEL}:generateContent"
     )
 
 MAX_SEARCH_SOURCE_URLS = 20
@@ -143,7 +139,7 @@ def _extract_urls(text):
     return _unique(clean)
 
 
-def _gemini_request(prompt, tools, preferred_model=None):
+def _gemini_request(prompt, tools):
     if not GEMINI_API_KEY:
         return {
             "ok": False,
@@ -156,85 +152,63 @@ def _gemini_request(prompt, tools, preferred_model=None):
     }
 
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        _gemini_generate_url(),
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY
+        },
+        method="POST"
+    )
+
     last_error = None
 
-    model_order = list(GEMINI_WEB_MODELS)
-    if preferred_model in model_order:
-        model_order.remove(preferred_model)
-        model_order.insert(0, preferred_model)
+    for attempt in range(MAX_GEMINI_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+                return {
+                    "ok": True,
+                    "data": json.loads(raw),
+                    "model": GEMINI_MODEL
+                }
 
-    for model_index, model in enumerate(model_order):
-        req = urllib.request.Request(
-            _gemini_generate_url(model),
-            data=body,
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": GEMINI_API_KEY
-            },
-            method="POST"
-        )
-
-        for attempt in range(MAX_GEMINI_RETRIES + 1):
+        except urllib.error.HTTPError as e:
             try:
-                with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-                    raw = resp.read().decode("utf-8", errors="replace")
-                    return {
-                        "ok": True,
-                        "data": json.loads(raw),
-                        "model": model
-                    }
+                detail = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                detail = str(e)
 
-            except urllib.error.HTTPError as e:
-                try:
-                    detail = e.read().decode("utf-8", errors="replace")
-                except Exception:
-                    detail = str(e)
+            last_error = f"Gemini HTTP {e.code}: {_clip(detail, 1200)}"
 
-                last_error = f"Gemini HTTP {e.code} ({model}): {_clip(detail, 1200)}"
+            if e.code not in RETRYABLE_HTTP_CODES or attempt >= MAX_GEMINI_RETRIES:
+                return {"ok": False, "error": last_error}
 
-                if e.code not in RETRYABLE_HTTP_CODES:
-                    break
-
-                if attempt < MAX_GEMINI_RETRIES:
-                    delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
-                    print(
-                        f"[WEB RETRY] {model} HTTP {e.code}; "
-                        f"{delay:.1f} sn sonra yeniden denenecek "
-                        f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
-                    )
-                    time.sleep(delay)
-                else:
-                    print(
-                        f"[WEB MODEL FALLBACK] {model} kullanılamıyor "
-                        f"(HTTP {e.code})."
-                    )
-
-            except (urllib.error.URLError, TimeoutError) as e:
-                last_error = f"Gemini bağlantı hatası ({model}): {e}"
-
-                if attempt < MAX_GEMINI_RETRIES:
-                    delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
-                    print(
-                        f"[WEB RETRY] {model} bağlantı sorunu; "
-                        f"{delay:.1f} sn sonra yeniden denenecek "
-                        f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
-                    )
-                    time.sleep(delay)
-                else:
-                    print(
-                        f"[WEB MODEL FALLBACK] {model} bağlantı sorunu nedeniyle "
-                        "sonraki modele geçiliyor."
-                    )
-
-            except Exception as e:
-                last_error = f"Gemini bağlantı hatası ({model}): {e}"
-                break
-
-        if model_index < len(GEMINI_WEB_MODELS) - 1:
-            next_model = model_order[model_index + 1]
+            delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
             print(
-                f"[WEB MODEL] {model} yerine {next_model} deneniyor."
+                f"[WEB RETRY] {GEMINI_MODEL} HTTP {e.code}; "
+                f"{delay:.1f} sn sonra yeniden denenecek "
+                f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
             )
+            time.sleep(delay)
+
+        except (urllib.error.URLError, TimeoutError) as e:
+            last_error = f"Gemini bağlantı hatası ({GEMINI_MODEL}): {e}"
+
+            if attempt >= MAX_GEMINI_RETRIES:
+                return {"ok": False, "error": last_error}
+
+            delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
+            print(
+                f"[WEB RETRY] {GEMINI_MODEL} bağlantı sorunu; "
+                f"{delay:.1f} sn sonra yeniden denenecek "
+                f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
+            )
+            time.sleep(delay)
+
+        except Exception as e:
+            return {"ok": False, "error": f"Gemini bağlantı hatası ({GEMINI_MODEL}): {e}"}
 
     return {
         "ok": False,
@@ -448,8 +422,7 @@ class WebResearchAgent:
                 _build_deep_prompt(
                     user_prompt, search_text, selected_urls, target_url
                 ),
-                [{"url_context": {}}],
-                preferred_model=first.get("model"),
+                [{"url_context": {}}]
             )
             if second.get("ok"):
                 second_data = second.get("data") or {}
@@ -468,8 +441,6 @@ class WebResearchAgent:
             ]
 
         unique_sources = _normalize_sources(source_records)
-
-        display_deep_text = strip_embedded_ledger(deep_text)
 
         display_deep_text = strip_embedded_ledger(deep_text)
 
