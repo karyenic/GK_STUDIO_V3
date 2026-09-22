@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 
 from config import GEMINI_API_KEY
 from web_guard import apply_web_guard
-from web_evidence import build_consistency_report, build_evidence_ledger, format_consistency_report, format_evidence_ledger
+from web_evidence import build_consistency_report, build_evidence_ledger, format_consistency_report, format_evidence_ledger, strip_embedded_ledger
 
 
 GEMINI_WEB_MODELS = (
@@ -484,9 +484,11 @@ class WebResearchAgent:
         if deep_text:
             report.extend([
                 "[2. ASAMA - URL CONTEXT DERIN OKUMA]",
-                _clip(deep_text, MAX_DEEP_TEXT_CHARS),
+                _clip(display_deep_text, MAX_DEEP_TEXT_CHARS),
                 ""
             ])
+
+        display_deep_text = strip_embedded_ledger(deep_text)
 
         evidence_ledger = build_evidence_ledger(
             user_prompt=user_prompt,
@@ -494,16 +496,18 @@ class WebResearchAgent:
             deep_text=deep_text,
             sources=unique_sources,
         )
+        display_deep_text = strip_embedded_ledger(deep_text)
+
         consistency_report = build_consistency_report(
             search_text=search_text,
-            deep_text=deep_text,
+            deep_text=display_deep_text,
             evidence_ledger=evidence_ledger,
         )
 
         guard_text = apply_web_guard(
             user_prompt=user_prompt,
             search_text=search_text,
-            deep_text=deep_text,
+            deep_text=display_deep_text,
             sources=unique_sources,
             queries=search_meta["queries"],
             evidence_ledger=evidence_ledger,
