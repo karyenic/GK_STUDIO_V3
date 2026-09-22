@@ -12,6 +12,8 @@ Yalnizca Python standart kutuphanesi kullanilir.
 
 import json
 import re
+import time
+import random
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
@@ -34,6 +36,8 @@ MAX_DEEP_TEXT_CHARS = 16000
 MAX_FINAL_REPORT_CHARS = 30000
 REQUEST_TIMEOUT = 60
 SOURCE_RESOLVE_TIMEOUT = 8
+MAX_GEMINI_RETRIES = 3
+RETRYABLE_HTTP_CODES = {408, 429, 500, 502, 503, 504}
 
 
 def _resolve_source_url(url):
@@ -157,21 +161,48 @@ def _gemini_request(prompt, tools):
         method="POST"
     )
 
-    try:
-        with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-            raw = resp.read().decode("utf-8", errors="replace")
-            return {"ok": True, "data": json.loads(raw)}
-    except urllib.error.HTTPError as e:
+    last_error = None
+
+    for attempt in range(MAX_GEMINI_RETRIES + 1):
         try:
-            detail = e.read().decode("utf-8", errors="replace")
-        except Exception:
-            detail = str(e)
-        return {
-            "ok": False,
-            "error": f"Gemini HTTP {e.code}: {_clip(detail, 1200)}"
-        }
-    except Exception as e:
-        return {"ok": False, "error": f"Gemini bağlantı hatası: {e}"}
+            with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+                return {"ok": True, "data": json.loads(raw)}
+        except urllib.error.HTTPError as e:
+            try:
+                detail = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                detail = str(e)
+
+            last_error = f"Gemini HTTP {e.code}: {_clip(detail, 1200)}"
+
+            if e.code not in RETRYABLE_HTTP_CODES or attempt >= MAX_GEMINI_RETRIES:
+                return {"ok": False, "error": last_error}
+
+            delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
+            print(
+                f"[WEB RETRY] Gemini HTTP {e.code}; "
+                f"{delay:.1f} sn sonra yeniden denenecek "
+                f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
+            )
+            time.sleep(delay)
+        except (urllib.error.URLError, TimeoutError) as e:
+            last_error = f"Gemini bağlantı hatası: {e}"
+
+            if attempt >= MAX_GEMINI_RETRIES:
+                return {"ok": False, "error": last_error}
+
+            delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
+            print(
+                f"[WEB RETRY] Gemini bağlantı sorunu; "
+                f"{delay:.1f} sn sonra yeniden denenecek "
+                f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
+            )
+            time.sleep(delay)
+        except Exception as e:
+            return {"ok": False, "error": f"Gemini bağlantı hatası: {e}"}
+
+    return {"ok": False, "error": last_error or "Gemini isteği başarısız."}
 
 
 def _extract_candidate(data):
