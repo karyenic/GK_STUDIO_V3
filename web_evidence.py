@@ -185,18 +185,27 @@ def find_explicit_arithmetic_checks(text):
 
 def find_explicit_totals(text):
     """
-    'toplam' kelimesinin bulunduğu aynı satırdaki son açık tam sayıyı toplar.
-    Yıl ifadeleri (örn. 2026) toplam adedi olarak kabul edilmez.
+    'toplam' kelimesi geçen satırlarda mümkünse 'adet' ile açıkça
+    ifade edilen sayıları toplar. Yılları toplam adedi olarak kabul etmez.
     """
     totals = []
 
     for raw in str(text or "").splitlines():
         line = raw.strip()
-        if "toplam" not in line.lower():
+        low = line.lower()
+        if "toplam" not in low:
             continue
 
+        adet_matches = re.findall(
+            r"([0-9][0-9\.]*)\s*(?:adet|adettir|olarak gerçekleşmiştir|olarak gercekleşmistir)",
+            line,
+            re.I,
+        )
+
+        candidates = adet_matches if adet_matches else _NUMBER_RE.findall(line)
+
         numbers = []
-        for token in _NUMBER_RE.findall(line):
+        for token in candidates:
             value = _parse_integer(token)
             if value is None:
                 continue
@@ -260,14 +269,26 @@ def _month_claim_values(evidence_ledger):
         "january", "february", "march", "april", "may", "june",
         "july", "august", "september",
     )
+
+    month_pattern = re.compile(
+        r"^(?P<month>" + "|".join(month_words) + r")\s+\d{4}(?:\s+otomobil)?(?:\s+satış(?:ları)?|\s+satis(?:lari)?)?$",
+        re.I,
+    )
+
     out = []
     for row in (evidence_ledger or {}).get("bound_evidence", []):
-        claim = str(row.get("claim") or "").lower()
+        claim = " ".join(str(row.get("claim") or "").split()).strip()
+        low = claim.lower()
         value = _parse_integer(row.get("value"))
-        if value is None:
+
+        # Kümülatif/range verileri (örn. Ocak-Ağustos 2026 Toplam)
+        # aylık satış hesabına dahil edilmez.
+        if value is None or "toplam" in low or "-" in claim:
             continue
-        if any(month in claim for month in month_words):
-            out.append((claim, value))
+
+        if month_pattern.fullmatch(low):
+            out.append((low, value))
+
     return out
 
 
@@ -289,26 +310,20 @@ def build_consistency_report(search_text, deep_text, evidence_ledger=None):
                 f"beklenen {check['expected']}, hesaplanan {check['actual']}."
             )
 
-    distinct_totals = _unique(str(item["value"]) for item in totals)
-    if len(distinct_totals) > 1:
-        warnings.append(
-            "Metin içinde birden fazla farklı açık toplam değeri bulundu: "
-            + ", ".join(distinct_totals)
-            + ". Tek bir toplam olarak sunmadan önce kaynakları kontrol et."
-        )
-
     month_values = _month_claim_values(evidence_ledger)
     if len(month_values) >= 2:
         calculated_month_total = sum(value for _, value in month_values)
-        if totals:
-            reported_totals = [item["value"] for item in totals]
-            if calculated_month_total not in reported_totals:
-                warnings.append(
-                    f"Kanıt defterindeki ay değerlerinin hesaplanan toplamı "
-                    f"{calculated_month_total}; metinde açıkça belirtilen "
-                    f"toplam(lar) {', '.join(str(x) for x in reported_totals)} "
-                    "ile eşleşmiyor."
-                )
+        reported_totals = [item["value"] for item in totals]
+
+        # Metinde ayrıca 564.241 gibi başka dönemlere ait kümülatif
+        # toplamlar bulunabilir. Bunları çelişki kabul etmeyiz.
+        # Yalnızca aylık hesabın karşılığı hiç bulunmuyorsa uyarırız.
+        if calculated_month_total not in reported_totals:
+            warnings.append(
+                f"Kanıt defterindeki aylık verilerin hesaplanan toplamı "
+                f"{calculated_month_total}; buna eşit açık bir toplam "
+                "değeri bulunamadı."
+            )
 
     return {
         "status": "Uyarı var." if warnings else "Temel tutarlılık kontrolleri geçti.",
