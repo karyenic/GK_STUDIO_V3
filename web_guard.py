@@ -150,12 +150,6 @@ def apply_web_guard(
                 "üretilmedi. Spesifik verileri doğrulanmış gibi sunma."
             )
 
-        if evidence_unmapped > 0:
-            warnings.append(
-                f"{evidence_unmapped} kaynak URL'sinin doğrudan bir veri satırıyla "
-                "eşleşmesi kurulamadı."
-            )
-
     if isinstance(consistency_report, dict):
         for item in (consistency_report.get("warnings") or []):
             warnings.append(str(item))
