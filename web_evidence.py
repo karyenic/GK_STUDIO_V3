@@ -213,8 +213,31 @@ def find_explicit_totals(text):
 
 
 def build_evidence_ledger(user_prompt, search_text, deep_text, sources):
-    bound = parse_explicit_evidence(deep_text)
     source_urls = _extract_source_urls(sources)
+    allowed = {url.lower(): url for url in source_urls}
+
+    parsed = parse_explicit_evidence(deep_text)
+    bound = []
+    seen = set()
+
+    for row in parsed:
+        source_url = str(row.get("source_url") or "").strip()
+        canonical = allowed.get(source_url.lower())
+        if not canonical:
+            continue
+
+        row = dict(row)
+        row["source_url"] = canonical
+        key = (
+            row["claim"].lower(),
+            row["value"].lower(),
+            canonical.lower(),
+        )
+        if key in seen:
+            continue
+
+        seen.add(key)
+        bound.append(row)
 
     bound_urls = _unique(row["source_url"] for row in bound)
 
