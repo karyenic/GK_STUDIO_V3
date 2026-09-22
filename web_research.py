@@ -461,7 +461,10 @@ class WebResearchAgent:
             "Kaynakta bulunmayan sayilari veya ayrintilari uydurma. "
             "Veri eksikse eksik oldugunu açıkça soyle. "
             "Kullanici tarafindan istenen adet kadar dogrulanmis kayit yoksa "
-            "eksik kayitlari kendi hafizandan tamamlama."
+            "eksik kayitlari kendi hafizandan tamamlama. "
+            "Mumkun oldugunda KANIT DEFTERI'ndeki veri-kaynak eslesmesini temel al. "
+            "TUTARLILIK KONTROLU bir uyusmazlik bildiriyorsa bunu gizleme ve "
+            "celiskili degerleri tek bir dogru gibi birlestirme."
         ])
 
         return _clip("\n".join(report), MAX_FINAL_REPORT_CHARS)
