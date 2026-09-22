@@ -335,6 +335,35 @@ def build_consistency_report(search_text, deep_text, evidence_ledger=None):
     }
 
 
+def strip_embedded_ledger(text):
+    """
+    Gemini'nin derin okuma cevabındaki kendi [KANIT DEFTERI] bloğunu
+    sunum metninden çıkarır. Makine tarafından parse edilen ham metin korunur.
+    """
+    text = str(text or "")
+    marker = "[KANIT DEFTERI]"
+    if marker not in text:
+        return text
+
+    before, after = text.split(marker, 1)
+    next_markers = (
+        "[TUTARLILIK KONTROLU]",
+        "[WEB GUARD]",
+        "[INCELENEN KAYNAKLAR]",
+    )
+
+    cut_at = None
+    for next_marker in next_markers:
+        pos = after.find(next_marker)
+        if pos >= 0:
+            cut_at = pos if cut_at is None else min(cut_at, pos)
+
+    if cut_at is None:
+        return before.rstrip()
+
+    return (before + after[cut_at:]).strip()
+
+
 def format_evidence_ledger(ledger):
     lines = [
         "[KANIT DEFTERI]",
