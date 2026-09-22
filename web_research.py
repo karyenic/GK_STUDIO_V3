@@ -471,6 +471,8 @@ class WebResearchAgent:
 
         display_deep_text = strip_embedded_ledger(deep_text)
 
+        display_deep_text = strip_embedded_ledger(deep_text)
+
         report = [
             "[WEB ARASTIRMA RAPORU]",
             "",
@@ -494,13 +496,14 @@ class WebResearchAgent:
                 "[2. ASAMA - URL CONTEXT DERIN OKUMA]",
                 _clip(display_deep_text, MAX_DEEP_TEXT_CHARS),
                 ""
-            ])        evidence_ledger = build_evidence_ledger(
+            ])
+
+        evidence_ledger = build_evidence_ledger(
             user_prompt=user_prompt,
             search_text=search_text,
             deep_text=deep_text,
             sources=unique_sources,
         )
-        display_deep_text = strip_embedded_ledger(deep_text)
 
         consistency_report = build_consistency_report(
             search_text=search_text,
