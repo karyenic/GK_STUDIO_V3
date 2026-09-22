@@ -186,7 +186,7 @@ def find_explicit_arithmetic_checks(text):
 def find_explicit_totals(text):
     """
     'toplam' kelimesinin bulunduğu aynı satırdaki son açık tam sayıyı toplar.
-    Bu kasıtlı olarak sınırlıdır; serbest metindeki her sayıyı toplam kabul etmez.
+    Yıl ifadeleri (örn. 2026) toplam adedi olarak kabul edilmez.
     """
     totals = []
 
@@ -198,8 +198,11 @@ def find_explicit_totals(text):
         numbers = []
         for token in _NUMBER_RE.findall(line):
             value = _parse_integer(token)
-            if value is not None:
-                numbers.append((token, value))
+            if value is None:
+                continue
+            if 1900 <= value <= 2100:
+                continue
+            numbers.append((token, value))
 
         if numbers:
             token, value = numbers[-1]
@@ -250,7 +253,25 @@ def build_evidence_ledger(user_prompt, search_text, deep_text, sources):
     }
 
 
-def build_consistency_report(search_text, deep_text):
+def _month_claim_values(evidence_ledger):
+    month_words = (
+        "ocak", "şubat", "subat", "mart", "nisan", "mayıs", "mayis",
+        "haziran", "temmuz", "ağustos", "agustos", "eylül", "eylul",
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september",
+    )
+    out = []
+    for row in (evidence_ledger or {}).get("bound_evidence", []):
+        claim = str(row.get("claim") or "").lower()
+        value = _parse_integer(row.get("value"))
+        if value is None:
+            continue
+        if any(month in claim for month in month_words):
+            out.append((claim, value))
+    return out
+
+
+def build_consistency_report(search_text, deep_text, evidence_ledger=None):
     combined = "\n".join([
         str(search_text or ""),
         str(deep_text or ""),
@@ -259,6 +280,7 @@ def build_consistency_report(search_text, deep_text):
     arithmetic = find_explicit_arithmetic_checks(combined)
     totals = find_explicit_totals(combined)
     warnings = []
+    calculated_month_total = None
 
     for check in arithmetic:
         if not check["ok"]:
@@ -275,11 +297,26 @@ def build_consistency_report(search_text, deep_text):
             + ". Tek bir toplam olarak sunmadan önce kaynakları kontrol et."
         )
 
+    month_values = _month_claim_values(evidence_ledger)
+    if len(month_values) >= 2:
+        calculated_month_total = sum(value for _, value in month_values)
+        if totals:
+            reported_totals = [item["value"] for item in totals]
+            if calculated_month_total not in reported_totals:
+                warnings.append(
+                    f"Kanıt defterindeki ay değerlerinin hesaplanan toplamı "
+                    f"{calculated_month_total}; metinde açıkça belirtilen "
+                    f"toplam(lar) {', '.join(str(x) for x in reported_totals)} "
+                    "ile eşleşmiyor."
+                )
+
     return {
         "status": "Uyarı var." if warnings else "Temel tutarlılık kontrolleri geçti.",
         "warnings": warnings,
         "arithmetic_checks": arithmetic,
         "totals": totals,
+        "month_evidence_count": len(month_values),
+        "calculated_month_total": calculated_month_total,
     }
 
 
@@ -315,6 +352,15 @@ def format_consistency_report(report):
         "[TUTARLILIK KONTROLU]",
         f"Durum: {report.get('status', 'Belirlenemedi.')}",
     ]
+
+    if report.get("month_evidence_count"):
+        lines.append(
+            f"Kanıt defterindeki aylık veri sayısı: {report.get('month_evidence_count')}"
+        )
+    if report.get("calculated_month_total") is not None:
+        lines.append(
+            f"Kanıt defterinden hesaplanan aylık toplam: {report.get('calculated_month_total')}"
+        )
 
     warnings = report.get("warnings") or []
     if warnings:
