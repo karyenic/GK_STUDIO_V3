@@ -23,11 +23,17 @@ from web_guard import apply_web_guard
 from web_evidence import build_consistency_report, build_evidence_ledger, format_consistency_report, format_evidence_ledger
 
 
-GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_GENERATE_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
+GEMINI_WEB_MODELS = (
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
 )
+
+def _gemini_generate_url(model):
+    return (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model}:generateContent"
+    )
 
 MAX_SEARCH_SOURCE_URLS = 20
 MAX_SESSION_CONTEXT_CHARS = 6000
@@ -146,63 +152,89 @@ def _gemini_request(prompt, tools):
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "tools": tools,
-        "generationConfig": {"temperature": 0.1}
+        "tools": tools
     }
 
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    req = urllib.request.Request(
-        GEMINI_GENERATE_URL,
-        data=body,
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY
-        },
-        method="POST"
-    )
-
     last_error = None
 
-    for attempt in range(MAX_GEMINI_RETRIES + 1):
-        try:
-            with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
-                raw = resp.read().decode("utf-8", errors="replace")
-                return {"ok": True, "data": json.loads(raw)}
-        except urllib.error.HTTPError as e:
+    for model_index, model in enumerate(GEMINI_WEB_MODELS):
+        req = urllib.request.Request(
+            _gemini_generate_url(model),
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": GEMINI_API_KEY
+            },
+            method="POST"
+        )
+
+        for attempt in range(MAX_GEMINI_RETRIES + 1):
             try:
-                detail = e.read().decode("utf-8", errors="replace")
-            except Exception:
-                detail = str(e)
+                with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
+                    raw = resp.read().decode("utf-8", errors="replace")
+                    return {
+                        "ok": True,
+                        "data": json.loads(raw),
+                        "model": model
+                    }
 
-            last_error = f"Gemini HTTP {e.code}: {_clip(detail, 1200)}"
+            except urllib.error.HTTPError as e:
+                try:
+                    detail = e.read().decode("utf-8", errors="replace")
+                except Exception:
+                    detail = str(e)
 
-            if e.code not in RETRYABLE_HTTP_CODES or attempt >= MAX_GEMINI_RETRIES:
-                return {"ok": False, "error": last_error}
+                last_error = f"Gemini HTTP {e.code} ({model}): {_clip(detail, 1200)}"
 
-            delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
+                if e.code not in RETRYABLE_HTTP_CODES:
+                    break
+
+                if attempt < MAX_GEMINI_RETRIES:
+                    delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
+                    print(
+                        f"[WEB RETRY] {model} HTTP {e.code}; "
+                        f"{delay:.1f} sn sonra yeniden denenecek "
+                        f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
+                    )
+                    time.sleep(delay)
+                else:
+                    print(
+                        f"[WEB MODEL FALLBACK] {model} kullanılamıyor "
+                        f"(HTTP {e.code})."
+                    )
+
+            except (urllib.error.URLError, TimeoutError) as e:
+                last_error = f"Gemini bağlantı hatası ({model}): {e}"
+
+                if attempt < MAX_GEMINI_RETRIES:
+                    delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
+                    print(
+                        f"[WEB RETRY] {model} bağlantı sorunu; "
+                        f"{delay:.1f} sn sonra yeniden denenecek "
+                        f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
+                    )
+                    time.sleep(delay)
+                else:
+                    print(
+                        f"[WEB MODEL FALLBACK] {model} bağlantı sorunu nedeniyle "
+                        "sonraki modele geçiliyor."
+                    )
+
+            except Exception as e:
+                last_error = f"Gemini bağlantı hatası ({model}): {e}"
+                break
+
+        if model_index < len(GEMINI_WEB_MODELS) - 1:
+            next_model = GEMINI_WEB_MODELS[model_index + 1]
             print(
-                f"[WEB RETRY] Gemini HTTP {e.code}; "
-                f"{delay:.1f} sn sonra yeniden denenecek "
-                f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
+                f"[WEB MODEL] {model} yerine {next_model} deneniyor."
             )
-            time.sleep(delay)
-        except (urllib.error.URLError, TimeoutError) as e:
-            last_error = f"Gemini bağlantı hatası: {e}"
 
-            if attempt >= MAX_GEMINI_RETRIES:
-                return {"ok": False, "error": last_error}
-
-            delay = min(60, (2 ** attempt)) + random.uniform(0, 1)
-            print(
-                f"[WEB RETRY] Gemini bağlantı sorunu; "
-                f"{delay:.1f} sn sonra yeniden denenecek "
-                f"({attempt + 1}/{MAX_GEMINI_RETRIES})."
-            )
-            time.sleep(delay)
-        except Exception as e:
-            return {"ok": False, "error": f"Gemini bağlantı hatası: {e}"}
-
-    return {"ok": False, "error": last_error or "Gemini isteği başarısız."}
+    return {
+        "ok": False,
+        "error": last_error or "Gemini web araştırma isteği başarısız."
+    }
 
 
 def _extract_candidate(data):
@@ -389,6 +421,7 @@ class WebResearchAgent:
             )
 
         search_data = first.get("data") or {}
+        search_model = first.get("model", "bilinmiyor")
         search_text = _extract_text(search_data)
         search_meta = _extract_search_metadata(search_data)
 
@@ -443,6 +476,8 @@ class WebResearchAgent:
             "[1. ASAMA - GOOGLE SEARCH BULGULARI]",
             _clip(search_text, MAX_SEARCH_TEXT_CHARS)
             if search_text else "Metinsel arama sonucu alınamadı.",
+            "",
+            f"[WEB MOTORU] {search_model}",
             ""
         ]
 
