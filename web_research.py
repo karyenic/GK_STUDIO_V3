@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from config import GEMINI_API_KEY
 from web_guard import apply_web_guard
+from web_evidence import build_consistency_report, build_evidence_ledger, format_consistency_report, format_evidence_ledger
 
 
 GEMINI_MODEL = "gemini-2.5-flash"
@@ -26,7 +27,7 @@ GEMINI_GENERATE_URL = (
     f"{GEMINI_MODEL}:generateContent"
 )
 
-MAX_SEARCH_SOURCE_URLS = 8
+MAX_SEARCH_SOURCE_URLS = 20
 MAX_SESSION_CONTEXT_CHARS = 6000
 MAX_SEARCH_TEXT_CHARS = 12000
 MAX_DEEP_TEXT_CHARS = 16000
@@ -296,6 +297,9 @@ ARASTIRMA KURALLARI:
 10. Buldugun kaynak URL'lerini koru.
 11. Bir veri listesi için kullanilabilir kanit sayisi yetersizse listeyi doldurmak icin tahmin yapma.
 12. Kullanici "ilk N" veya "top N" isterse N sayisina ulasamiyorsan eksik kayitlari acikca belirt.
+13. Ikinci asama sonunda mutlaka "[KANIT DEFTERI]" bolumu üret.
+14. Kanit defterinde mümkün olduğunca her spesifik sayi, tarih, marka, adet veya fiyatı tek bir gerçek kaynak URL'sine bağla.
+15. Kaynakta doğrulanmayan bir değeri kanıt defterine koyma.
 {target_note}
 {previous_note}
 """.strip()
@@ -327,6 +331,13 @@ KURALLAR:
 5. Site incelemesinde sayfa basliklari, urun/kategori yapisi, iletisim, katalog/PDF ve onemli baglantilari ayir.
 6. Sayisal veri isteniyorsa temiz tablo satirlari uret.
 7. Hangi URL'den hangi bilginin alindigini belirt.
+8. Cevabin sonunda tam olarak su yapida bir kanit defteri üret:
+   [KANIT DEFTERI]
+   Veri | Değer | Kaynak
+   ---|---|---
+   Nisan 2026 | 80.182 | https://...
+   Her satirdaki kaynak URL'si, yukarida verilen URL'lerden biri olmali.
+9. Bir veri URL'lerde doğrudan bulunmuyorsa "Kaynakta bulunamadi" yaz ve tahmin etme.
 """.strip()
 
 
@@ -414,15 +425,32 @@ class WebResearchAgent:
                 ""
             ])
 
+        evidence_ledger = build_evidence_ledger(
+            user_prompt=user_prompt,
+            search_text=search_text,
+            deep_text=deep_text,
+            sources=unique_sources,
+        )
+        consistency_report = build_consistency_report(
+            search_text=search_text,
+            deep_text=deep_text,
+        )
+
         guard_text = apply_web_guard(
             user_prompt=user_prompt,
             search_text=search_text,
             deep_text=deep_text,
             sources=unique_sources,
             queries=search_meta["queries"],
+            evidence_ledger=evidence_ledger,
+            consistency_report=consistency_report,
         )
 
         report.extend([
+            format_evidence_ledger(evidence_ledger),
+            "",
+            format_consistency_report(consistency_report),
+            "",
             "[INCELENEN KAYNAKLAR]",
             _format_sources(unique_sources),
             "",
