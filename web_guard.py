@@ -93,6 +93,8 @@ def apply_web_guard(
     deep_text,
     sources,
     queries,
+    evidence_ledger=None,
+    consistency_report=None,
 ):
     requested = requested_count(user_prompt)
 
@@ -125,6 +127,38 @@ def apply_web_guard(
             f"Kullanıcı {requested} kayıt istedi ancak yapılandırılmış satır "
             "tespit edilemedi. Qwen eksik listeyi kendi bilgisinden doldurmamalı."
         )
+
+    evidence_bound = 0
+    evidence_unmapped = 0
+    if isinstance(evidence_ledger, dict):
+        try:
+            evidence_bound = int(evidence_ledger.get("bound_count", 0) or 0)
+            evidence_unmapped = int(evidence_ledger.get("unmapped_source_count", 0) or 0)
+        except (TypeError, ValueError):
+            evidence_bound = 0
+            evidence_unmapped = 0
+
+        if requested is not None and evidence_bound < requested:
+            warnings.append(
+                f"Kullanıcı {requested} kayıt istedi; doğrudan veri-kaynak "
+                f"eşleşmesi {evidence_bound} adet. Eksik kayıtları tahmin etme."
+            )
+
+        if evidence_bound == 0 and deep_text:
+            warnings.append(
+                "Derin okuma metni var ancak doğrudan veri-kaynak eşleşmesi "
+                "üretilmedi. Spesifik verileri doğrulanmış gibi sunma."
+            )
+
+        if evidence_unmapped > 0:
+            warnings.append(
+                f"{evidence_unmapped} kaynak URL'sinin doğrudan bir veri satırıyla "
+                "eşleşmesi kurulamadı."
+            )
+
+    if isinstance(consistency_report, dict):
+        for item in (consistency_report.get("warnings") or []):
+            warnings.append(str(item))
 
     if not warnings:
         warnings.append("Temel web guard kontrolleri geçti; yine de kaynak kurallarına uy.")
