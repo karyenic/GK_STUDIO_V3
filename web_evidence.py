@@ -471,15 +471,6 @@ def format_consistency_report(report):
             f"Kanıt defterinden hesaplanan aylık toplam: {report.get('calculated_month_total')}"
         )
 
-    if report.get("month_evidence_count"):
-        lines.append(
-            f"Kanıt defterindeki aylık veri sayısı: {report.get('month_evidence_count')}"
-        )
-    if report.get("calculated_month_total") is not None:
-        lines.append(
-            f"Kanıt defterinden hesaplanan aylık toplam: {report.get('calculated_month_total')}"
-        )
-
     warnings = report.get("warnings") or []
     if warnings:
         lines.extend([
