@@ -309,7 +309,7 @@ export const UI = {
       const del = document.createElement('button');
       del.className = 'del';
       del.textContent = 'Sil';
-      del.onclick = e => { 
+      del.onclick = async e => { 
         e.stopPropagation();
 
         const deletedConv = State.conversations[id];
@@ -318,37 +318,44 @@ export const UI = {
 
         delete State.conversations[id];
 
+        if (deletedWasProject) {
+          // Silinen RAG sohbetinin son halini aynı proje dosyasına yaz.
+          // Sunucu yalnızca aynı projectName taşıyan kayıtları kabul eder.
+          await this.persistConversationState({ projectName: deletedProjectName });
+
+          const projectIds = Object.keys(State.conversations).filter(otherId => {
+            return State.conversations[otherId]?.projectName === deletedProjectName;
+          });
+
+          if (!projectIds.length && State.activeProjectName === deletedProjectName) {
+            State.activeProjectName = null;
+            State.currentId = null;
+            this.createNewChat();
+            return;
+          }
+
+          if (State.currentId === id || !State.currentId) {
+            State.currentId = projectIds[0] || null;
+          }
+
+          this.renderHistory();
+          this.renderChat();
+          return;
+        }
+
         if (State.currentId === id) {
           const remaining = Object.keys(State.conversations).filter(otherId => {
-            const other = State.conversations[otherId];
-            return !other?.projectName || other.projectName === State.activeProjectName;
+            return !State.conversations[otherId]?.projectName;
           });
           State.currentId = remaining[0] || null;
         }
 
         if (!State.currentId) {
-          if (deletedWasProject && State.activeProjectName === deletedProjectName) {
-            const ids = Object.keys(State.conversations).filter(otherId => {
-              const other = State.conversations[otherId];
-              return other?.projectName === deletedProjectName;
-            });
-            State.currentId = ids[0] || null;
-          }
-
-          if (!State.currentId) {
-            this.createNewChat();
-            return;
-          }
+          this.createNewChat();
+          return;
         }
 
-        if (deletedWasProject) {
-          this.persistConversationState({
-            projectName: deletedProjectName
-          });
-        } else {
-          this.persistConversationState();
-        }
-
+        this.persistConversationState();
         this.renderHistory();
         this.renderChat();
       };
