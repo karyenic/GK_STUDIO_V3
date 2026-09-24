@@ -85,7 +85,7 @@ def index_project_folder(proj_name, proj_path):
     file_count = 0
 
     for root, dirs, files in os.walk(proj_path):
-        dirs[:] = [d for d in dirs if d not in ['.git', 'venv', '__pycache__', 'node_modules', 'chat_history', 'conversations', 'exports', 'excel', 'uploads', 'chroma_db', 'logs', '_backups', 'ARCHIVE']]
+        dirs[:] = [d for d in dirs if d not in ['.git', 'venv', '__pycache__', 'node_modules', 'chat_history', 'conversations', 'exports', 'excel', 'uploads', 'chroma_db', 'logs', '_backups', 'ARCHIVE', '.gk_studio']]
         for file in files:
             lower_f = file.lower()
             if lower_f.endswith(('.png', '.jpg', '.jpeg', '.zip', '.exe', '.pyc', '.xlsx', '.pdf', '.ico', '.db', '.bak', '.patch')):
