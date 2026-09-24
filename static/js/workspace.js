@@ -3,8 +3,14 @@ import { API } from './api.js';
 import { State } from './state.js';
 
 function makeProjectConversationId(projectName, oldId = '') {
-  const safe = String(projectName || 'project').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 24);
-  return `p_${safe}_${String(oldId || Date.now())}`;
+  const existing = String(oldId || '');
+  if (existing.startsWith('p_')) return existing;
+
+  const safe = String(projectName || 'project')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .slice(0, 24);
+
+  return `p_${safe}_${existing || Date.now()}`;
 }
 
 export const Workspace = {
