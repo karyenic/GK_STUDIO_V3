@@ -211,7 +211,25 @@ export const UI = {
     conv.webActive = false;
     conv.webTarget = '';
     this.updateWebBanner(conv);
-    API.saveConversations(State.conversations, State.currentId, State.nextId);
+    this.persistConversationState(conv);
+  },
+
+  async persistConversationState(conv = null) {
+    const current = conv || State.conversations[State.currentId];
+    if (current && current.projectName) {
+      return API.saveProjectConversations(
+        current.projectName,
+        State.conversations,
+        State.currentId,
+        State.nextId
+      );
+    }
+
+    return API.saveConversations(
+      State.conversations,
+      State.currentId,
+      State.nextId
+    );
   },
 
   updateTopBadge(conv) {
@@ -240,7 +258,7 @@ export const UI = {
     State.conversations[id] = { title: 'Yeni Sohbet', model: selectedModel, created: Date.now(), messages: [], isGenerating: false };
     State.currentId = id;
     State.saveToStorage();
-    API.saveConversations(State.conversations, State.currentId, State.nextId);
+    this.persistConversationState();
     this.renderHistory();
     this.renderChat();
     this.updateTopBadge(State.conversations[id]);
@@ -264,6 +282,9 @@ export const UI = {
     keys.forEach(id => {
       const c = State.conversations[id];
       const isProjectConv = !!c.projectName;
+
+      // RAG sohbeti yalnızca kendi aktif workspace'i içindeyken görünür.
+      if (isProjectConv && c.projectName !== State.activeProjectName) return;
 
       const div = document.createElement('div');
       div.className = 'hist-item' + (id === State.currentId ? ' active' : '') + (isProjectConv ? ' rag-conv-item' : '');
@@ -292,7 +313,7 @@ export const UI = {
         }
         if (!State.currentId) this.createNewChat();
         else { this.renderHistory(); this.renderChat(); }
-        API.saveConversations(State.conversations, State.currentId, State.nextId);
+        this.persistConversationState();
       };
 
       div.appendChild(t);
@@ -788,7 +809,7 @@ export const UI = {
             assistantMsg.isLiveTimer = false;
             assistantMsg.elapsedTime = evt.elapsed_time || ((performance.now() - tStart) / 1000).toFixed(2);
             this.renderChat();
-            API.saveConversations(State.conversations, State.currentId, State.nextId);
+            this.persistConversationState(conv);
           }
         }
       }
