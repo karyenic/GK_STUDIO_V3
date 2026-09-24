@@ -104,6 +104,13 @@ def apply_web_guard(
     ])
     rows = observed_rows(combined_text)
 
+    if isinstance(evidence_ledger, dict):
+        try:
+            evidence_bound_for_count = int(evidence_ledger.get("bound_count", 0) or 0)
+        except (TypeError, ValueError):
+            evidence_bound_for_count = 0
+        rows = max(rows, evidence_bound_for_count)
+
     urls = _unique_urls(
         [src.get("url") for src in (sources or []) if isinstance(src, dict)]
     )
