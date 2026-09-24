@@ -51,6 +51,25 @@ export const API = {
       body: JSON.stringify({ conversations: convs, currentConvId, nextId })
     });
   },
+  async loadProjectConversations(name) {
+    const res = await fetch('/api/projects/conversations/load?name=' + encodeURIComponent(name), {
+      cache: 'no-store'
+    });
+    return res.json();
+  },
+  async saveProjectConversations(projectName, convs, currentConvId, nextId) {
+    const res = await fetch('/api/projects/conversations/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project_name: projectName,
+        conversations: convs,
+        currentConvId,
+        nextId
+      })
+    });
+    return res.json();
+  },
   async loadConversations() {
     const res = await fetch('/load-conversations', { cache: 'no-store' });
     return res.json();
