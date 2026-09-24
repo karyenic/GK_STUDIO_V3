@@ -42,3 +42,5 @@ logs/
 !rag.py
 !gateway.py
 !app.py
+# GK Studio RAG conversation migration marker
+.gk_project_conversation_migrated
