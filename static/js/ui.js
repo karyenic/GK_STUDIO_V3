@@ -240,6 +240,11 @@ export const UI = {
   },
 
   createNewChat() {
+    Object.keys(State.conversations).forEach(id => {
+      if (State.conversations[id]?.projectName) {
+        delete State.conversations[id];
+      }
+    });
     State.activeProjectName = null;
     Workspace.refreshProjectList();
 
@@ -305,15 +310,47 @@ export const UI = {
       del.className = 'del';
       del.textContent = 'Sil';
       del.onclick = e => { 
-        e.stopPropagation(); 
-        delete State.conversations[id]; 
+        e.stopPropagation();
+
+        const deletedConv = State.conversations[id];
+        const deletedWasProject = !!deletedConv?.projectName;
+        const deletedProjectName = deletedConv?.projectName || null;
+
+        delete State.conversations[id];
+
         if (State.currentId === id) {
-          const remaining = Object.keys(State.conversations);
+          const remaining = Object.keys(State.conversations).filter(otherId => {
+            const other = State.conversations[otherId];
+            return !other?.projectName || other.projectName === State.activeProjectName;
+          });
           State.currentId = remaining[0] || null;
         }
-        if (!State.currentId) this.createNewChat();
-        else { this.renderHistory(); this.renderChat(); }
-        this.persistConversationState();
+
+        if (!State.currentId) {
+          if (deletedWasProject && State.activeProjectName === deletedProjectName) {
+            const ids = Object.keys(State.conversations).filter(otherId => {
+              const other = State.conversations[otherId];
+              return other?.projectName === deletedProjectName;
+            });
+            State.currentId = ids[0] || null;
+          }
+
+          if (!State.currentId) {
+            this.createNewChat();
+            return;
+          }
+        }
+
+        if (deletedWasProject) {
+          this.persistConversationState({
+            projectName: deletedProjectName
+          });
+        } else {
+          this.persistConversationState();
+        }
+
+        this.renderHistory();
+        this.renderChat();
       };
 
       div.appendChild(t);
@@ -327,6 +364,14 @@ export const UI = {
           previousConv.webActive = false;
           previousConv.webTarget = '';
         }
+        if (!c.projectName && State.activeProjectName) {
+          Object.keys(State.conversations).forEach(otherId => {
+            if (State.conversations[otherId]?.projectName) {
+              delete State.conversations[otherId];
+            }
+          });
+        }
+
         State.currentId = id; 
         if (c.projectName) {
           State.activeProjectName = c.projectName;
