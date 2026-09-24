@@ -262,6 +262,61 @@ def build_evidence_ledger(user_prompt, search_text, deep_text, sources):
     }
 
 
+def find_period_total_conflicts(text):
+    """
+    Aynı istenen dönem için metinde farklı toplamlar varsa tespit eder.
+    Özellikle 'son 6 ay' gibi dönem toplamlarında ilk aşamadaki hatalı
+    toplam ile ikinci aşamadaki yeniden hesaplanan toplamı ayırır.
+    """
+    groups = {}
+
+    for raw in str(text or "").splitlines():
+        line = " ".join(raw.strip().split())
+        low = line.lower()
+
+        if "toplam" not in low:
+            continue
+
+        numbers = re.findall(
+            r"([0-9][0-9\.]*)\s*(?:adet|adettir)",
+            line,
+            re.I,
+        )
+        if not numbers:
+            continue
+
+        token = numbers[-1]
+        value = _parse_integer(token)
+        if value is None:
+            continue
+
+        # Yıl gibi küçük sayıları toplam adedi olarak kabul etme.
+        if 1900 <= value <= 2100:
+            continue
+
+        if "son 6 ay" in low or ("mart" in low and "ağustos" in low):
+            key = "mart-2026_agustos-2026"
+        elif "ocak-ağustos" in low or "ocak-agustos" in low:
+            key = "ocak-agustos-2026"
+        elif "ocak-şubat" in low or "ocak-subat" in low:
+            key = "ocak-subat-2026"
+        else:
+            continue
+
+        groups.setdefault(key, []).append(value)
+
+    conflicts = []
+    for period, values in groups.items():
+        unique_values = _unique(str(v) for v in values)
+        if len(unique_values) > 1:
+            conflicts.append({
+                "period": period,
+                "values": [int(v) for v in unique_values],
+            })
+
+    return conflicts
+
+
 def _month_claim_values(evidence_ledger):
     month_words = (
         "ocak", "şubat", "subat", "mart", "nisan", "mayıs", "mayis",
@@ -300,6 +355,7 @@ def build_consistency_report(search_text, deep_text, evidence_ledger=None):
 
     arithmetic = find_explicit_arithmetic_checks(combined)
     totals = find_explicit_totals(combined)
+    period_conflicts = find_period_total_conflicts(combined)
     warnings = []
     calculated_month_total = None
 
@@ -309,6 +365,14 @@ def build_consistency_report(search_text, deep_text, evidence_ledger=None):
                 f"Aritmetik uyuşmazlık: {check['expression']} -> "
                 f"beklenen {check['expected']}, hesaplanan {check['actual']}."
             )
+
+    for conflict in period_conflicts:
+        warnings.append(
+            f"Aynı dönem için farklı toplamlar bulundu "
+            f"({conflict['period']}): "
+            + ", ".join(f"{v:,}".replace(",", ".") for v in conflict["values"])
+            + ". Kaynağa dayalı tek bir toplam doğrulanmadan kesin değer sunma."
+        )
 
     month_values = _month_claim_values(evidence_ledger)
     if len(month_values) >= 2:
@@ -330,6 +394,7 @@ def build_consistency_report(search_text, deep_text, evidence_ledger=None):
         "warnings": warnings,
         "arithmetic_checks": arithmetic,
         "totals": totals,
+        "period_conflicts": period_conflicts,
         "month_evidence_count": len(month_values),
         "calculated_month_total": calculated_month_total,
     }
