@@ -18,6 +18,13 @@ from backends.gemini_backend import GeminiBackend
 from backends.ipex_backend import IPEXBackend
 from backends.ollama_backend import OllamaBackend
 from rag import index_project_folder, clear_project_index
+from conversation_store import (
+    load_global_conversations,
+    save_global_conversations,
+    load_project_conversations,
+    save_project_conversations,
+    migrate_legacy_project_conversations,
+)
 
 app = Flask(__name__, static_folder="static", template_folder="static")
 
@@ -177,6 +184,7 @@ def api_add_project():
             "indexed": False
         }
         save_projects_config(config)
+        os.makedirs(os.path.join(proj_path, ".gk_studio"), exist_ok=True)
         return jsonify({"status": "success", "message": f"'{proj_name}' projesi eklendi."})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -220,55 +228,94 @@ def api_delete_project():
 
 @app.route('/load-conversations', methods=['GET'])
 def load_conversations():
-    all_convs = {}
-    latest_id = None
-    max_id = 1
-    os.makedirs(CHAT_DIR, exist_ok=True)
-    for fn in os.listdir(CHAT_DIR):
-        if fn.endswith('.json'):
-            try:
-                with open(os.path.join(CHAT_DIR, fn), 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    for cid, c in data.get('conversations', {}).items():
-                        # Üretim durumu çalışma zamanına aittir; kalıcı olmamalıdır.
-                        c['isGenerating'] = False
-                        c.pop('abortCtrl', None)
-                        all_convs[cid] = c
-                    if data.get('currentConvId'):
-                        latest_id = data.get('currentConvId')
-                    if data.get('nextId', 1) > max_id:
-                        max_id = data.get('nextId', 1)
-            except (json.JSONDecodeError, OSError):
-                pass
-    return jsonify({'found': bool(all_convs), 'data': {'conversations': all_convs, 'currentConvId': latest_id, 'nextId': max_id}})
+    # Eski sürümlerde global chat_history içine yazılmış RAG sohbetlerini
+    # bir kez ilgili proje klasörüne taşırız; global cevap artık yalnızca
+    # normal sohbetleri döndürür.
+    migration_marker = os.path.join(BASE_DIR, ".gk_project_conversation_migrated")
+    if not os.path.exists(migration_marker):
+        try:
+            moved, skipped = migrate_legacy_project_conversations(
+                BASE_DIR,
+                load_projects_config(),
+            )
+            with open(migration_marker, "w", encoding="utf-8") as mf:
+                mf.write(f"moved={moved}\nskipped={skipped}\n")
+        except OSError:
+            pass
+
+    data = load_global_conversations(CHAT_DIR)
+    return jsonify({
+        "found": bool(data.get("conversations")),
+        "data": data,
+    })
+
 
 @app.route('/save-conversations', methods=['POST'])
 def save_conversations():
-    data = request.get_json() or {}
-    convs = data.get('conversations', {})
-    cur_id = data.get('currentConvId')
-    next_id = data.get('nextId', 1)
-    os.makedirs(CHAT_DIR, exist_ok=True)
-    groups = {}
-    for cid, c in convs.items():
-        # isGenerating ve abortCtrl yalnızca tarayıcı çalışma durumudur.
-        # Kalıcı sohbete yazılmaz; böylece bitmiş sohbetler sonsuza kadar "düşünüyor" kalmaz.
-        safe_c = dict(c)
-        safe_c['isGenerating'] = False
-        safe_c.pop('abortCtrl', None)
-
-        m = (safe_c.get('model') or 'default_model').replace(":", "_").replace("\\", "_").replace("/", "_")
-        if m not in groups:
-            groups[m] = {}
-        groups[m][cid] = safe_c
-
-    for m, g in groups.items():
-        try:
-            with open(os.path.join(CHAT_DIR, f"{m}.json"), 'w', encoding='utf-8') as f:
-                json.dump({"conversations": g, "currentConvId": cur_id if cur_id in g else None, "nextId": next_id}, f, ensure_ascii=False, indent=4)
-        except OSError:
-            pass
+    data = request.get_json(silent=True) or {}
+    save_global_conversations(
+        chat_dir=CHAT_DIR,
+        conversations=data.get("conversations", {}),
+        current_conv_id=data.get("currentConvId"),
+        next_id=data.get("nextId", 1),
+    )
     return jsonify({"status": "success"})
+
+
+@app.route('/api/projects/conversations/load', methods=['GET'])
+def api_load_project_conversations():
+    project_name = str(request.args.get("name", "") or "").strip()
+    if not project_name:
+        return jsonify({"status": "error", "message": "Proje adı zorunludur."}), 400
+
+    config = load_projects_config()
+    proj = config.get(project_name)
+    if not proj:
+        return jsonify({"status": "error", "message": "Proje bulunamadı."}), 404
+
+    project_path = str(proj.get("path") or "").strip()
+    if not project_path or not os.path.isdir(project_path):
+        return jsonify({"status": "error", "message": "Proje dizini bulunamadı."}), 404
+
+    data = load_project_conversations(project_path)
+    data["project_name"] = project_name
+    return jsonify({"status": "success", "data": data})
+
+
+@app.route('/api/projects/conversations/save', methods=['POST'])
+def api_save_project_conversations():
+    data = request.get_json(silent=True) or {}
+    project_name = str(data.get("project_name", "") or "").strip()
+
+    if not project_name:
+        return jsonify({"status": "error", "message": "Proje adı zorunludur."}), 400
+
+    config = load_projects_config()
+    proj = config.get(project_name)
+    if not proj:
+        return jsonify({"status": "error", "message": "Proje bulunamadı."}), 404
+
+    project_path = str(proj.get("path") or "").strip()
+    if not project_path or not os.path.isdir(project_path):
+        return jsonify({"status": "error", "message": "Proje dizini bulunamadı."}), 404
+
+    conversations = {}
+    for cid, conv in (data.get("conversations", {}) or {}).items():
+        if not isinstance(conv, dict):
+            continue
+        if str(conv.get("projectName") or "").strip() != project_name:
+            continue
+        conversations[str(cid)] = conv
+
+    save_project_conversations(
+        project_path=project_path,
+        project_name=project_name,
+        conversations=conversations,
+        current_conv_id=data.get("currentConvId"),
+        next_id=data.get("nextId", 1),
+    )
+    return jsonify({"status": "success"})
+
 
 @app.route('/markdown-to-excel', methods=['POST'])
 def markdown_to_excel():
