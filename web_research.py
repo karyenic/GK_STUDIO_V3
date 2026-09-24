@@ -83,6 +83,8 @@ def _normalize_sources(sources):
             continue
 
         final_url = _resolve_source_url(raw_url)
+        if "vertexaisearch.cloud.google.com" in final_url.lower():
+            continue
         key = final_url.lower()
 
         if key in seen:
@@ -133,6 +135,8 @@ def _extract_urls(text):
         try:
             parsed = urlparse(url)
             if parsed.scheme in ("http", "https") and parsed.netloc:
+                if "vertexaisearch.cloud.google.com" in parsed.netloc.lower():
+                    continue
                 clean.append(url)
         except Exception:
             continue
