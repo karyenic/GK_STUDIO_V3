@@ -1,46 +1,66 @@
-# Python önbellek dosyaları
+# ============================================================
+# GK STUDIO V3 — .gitignore
+# ============================================================
+
+# --- Python önbellek ---
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Sanal ortam
+# --- Sanal ortamlar ---
 venv/
+.venv/
 env/
 
-# Çevresel değişkenler ve API anahtarları
+# --- Çevresel değişkenler ---
 .env
+.env.*
+!.env.example
 
-# RAG / ChromaDB Vektör Veritabanı ve Yerel Sohbet Kayıtları
-# (Bunların GitHub'a gitmesine gerek yok, yerelde kalmalı)
+# --- GK Studio meta ve kişisel veriler ---
+.gk_studio/
+.gk_project_conversation_migrated
+chat_history/
+conversations/
+chats/
 chroma_db/
 rag_db/
-chats/
-conversations/
+*.sqlite3
+*.db
 
-# Loglar
+# --- Loglar ---
+logs/
 *.log
-# Yedekler ve arşivler
+
+# --- Yedekler ve arşivler ---
 _backups/
 BACKUPS/
 ARCHIVE/
 *.bak
 *.patch
+*.before_*
+rag.py.before_*
+gateway.py.before_*
+ui.js.before_*
+websearch.py.before_*
 
-# Sohbet geçmişleri ve yerel veriler
-chat_history/
+# --- Kullanıcı verileri ---
 exports/
 excel/
 uploads/
-chroma_db/
-logs/
 
-# Geçici test dosyaları
-*.py
-*.txt
-!config.py
-!rag.py
-!gateway.py
-!app.py
-# GK Studio RAG conversation migration marker
-.gk_project_conversation_migrated
+# --- Yedek JS/TXT dosyaları ---
+static/js/*_backup_*.txt
+static/js/*_yedek.txt
+static/js/*_backup_*.js
+static/js/ui_js_backup_*.js
+
+# --- Editör ---
+.idea/
+.vscode/
+*.swp
+
+# --- OS ---
+.DS_Store
+Thumbs.db

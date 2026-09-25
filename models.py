@@ -8,11 +8,21 @@ import urllib.request
 import json
 from config import EMBEDDING_OLLAMA_URL
 
-def get_num_ctx(model_name, extra_chars=0, is_project=False):
+
+def get_num_ctx(model_name, extra_chars=0, is_project=False, is_vision=False):
     """
     VRAM ve RAM taşmasını önleyen, 14B modellerde 32K tavan sağlayan 
     akıllı dinamik context hesaplama algoritması.
     """
+    # ✅ Vision dalı — model profiline göre ayrı ctx döner
+    if is_vision:
+        from config import VISION_CTX_PROFILE, DEFAULT_VISION_CTX
+        m_lower = (model_name or "").lower()
+        for pattern, ctx_val in VISION_CTX_PROFILE.items():
+            if pattern in m_lower:
+                return ctx_val
+        return DEFAULT_VISION_CTX
+
     tiers = [4096, 8192, 16384, 32768]
     m_lower = (model_name or "").lower()
 
@@ -39,6 +49,7 @@ def get_num_ctx(model_name, extra_chars=0, is_project=False):
 
     return hard_cap
 
+
 def get_installed_ollama_models():
     """Embedding Ollama servisinden (Port 11435) yüklü modelleri çeker."""
     try:
@@ -50,6 +61,7 @@ def get_installed_ollama_models():
     except Exception:
         pass
     return []
+
 
 def get_categorized_models():
     """Arayüz için modelleri yetenek sınıflarına ayırır."""

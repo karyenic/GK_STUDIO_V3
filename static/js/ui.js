@@ -148,6 +148,7 @@ export const UI = {
     add('Yerel', d.local || []);
     add('Kod (Coder)', d.coder || []);
     add('Akıl Yürütme', d.reasoning || []);
+    add('👁️ Görsel (Vision)', d.vision || []);
     add('Bulut', d.cloud || []);
   },
 
@@ -161,7 +162,7 @@ export const UI = {
 
   extractWebTarget(text) {
     const m = String(text || '').match(/https?:\/\/[^\s<>"']+|www\.[^\s<>"']+/i);
-    return m ? m[0].replace(/[.,);\]}> ]+$/g, '') : '';
+    return m ? m[0].replace(/[.,);\]}> ]+$/g, '') : '';
   },
 
   needsWebSearch(text) {
@@ -288,7 +289,6 @@ export const UI = {
       const c = State.conversations[id];
       const isProjectConv = !!c.projectName;
 
-      // RAG sohbeti yalnızca kendi aktif workspace'i içindeyken görünür.
       if (isProjectConv && c.projectName !== State.activeProjectName) return;
 
       const div = document.createElement('div');
@@ -319,8 +319,6 @@ export const UI = {
         delete State.conversations[id];
 
         if (deletedWasProject) {
-          // Silinen RAG sohbetinin son halini aynı proje dosyasına yaz.
-          // Sunucu yalnızca aynı projectName taşıyan kayıtları kabul eder.
           await this.persistConversationState({ projectName: deletedProjectName });
 
           const projectIds = Object.keys(State.conversations).filter(otherId => {
@@ -364,7 +362,6 @@ export const UI = {
       div.appendChild(tag);
       div.appendChild(del);
       
-      // ESKİ SOHBETE TIKLANDIĞINDA TIBBİ DÜZELTME: STATE VE BUTON SENRONİZASYONU
       div.onclick = () => { 
         const previousConv = State.conversations[State.currentId];
         if (previousConv && previousConv !== c) {
@@ -391,7 +388,6 @@ export const UI = {
         this.updateTopBadge(c);
         this.updateWebBanner(c);
 
-        // Sohbetin üretim durumuna göre Gönder/Dur butonunu esnek hale getir
         if (c.isGenerating) {
           this.setSendBtnState(true);
     this.setStopBtnState(true);
@@ -450,6 +446,7 @@ export const UI = {
         const actions = document.createElement('div');
         actions.className = 'msg-actions';
 
+        // ✅ KOPYALA
         const copyBtn = document.createElement('button');
         copyBtn.className = 'msg-act-btn';
         copyBtn.textContent = '📋 Kopyala';
@@ -459,6 +456,7 @@ export const UI = {
           setTimeout(() => copyBtn.textContent = '📋 Kopyala', 2000);
         };
 
+        // ✅ İNDİR
         const dlBtn = document.createElement('button');
         dlBtn.className = 'msg-act-btn';
         dlBtn.textContent = '💾 İndir';
@@ -470,8 +468,31 @@ export const UI = {
           a.click();
         };
 
+        // ✅ SİL (geri eklendi)
+        const delBtn = document.createElement('button');
+        delBtn.className = 'msg-act-btn';
+        delBtn.textContent = '🗑️ Sil';
+        delBtn.style.color = '#ef4444';
+        delBtn.onclick = () => {
+          if (!confirm('Bu mesajı silmek istediğinize emin misiniz?')) return;
+          const msgIndex = conv.messages.indexOf(m);
+          if (msgIndex >= 0) {
+            conv.messages.splice(msgIndex, 1);
+
+            // Eğer hiç kullanıcı mesajı kalmadıysa başlığı sıfırla
+            if (conv.messages.filter(x => x.role === 'user').length === 0 && !conv.projectName) {
+              conv.title = 'Yeni Sohbet';
+            }
+
+            this.renderChat();
+            this.renderHistory();
+            this.persistConversationState(conv);
+          }
+        };
+
         actions.appendChild(copyBtn);
         actions.appendChild(dlBtn);
+        actions.appendChild(delBtn);
         footer.appendChild(actions);
       }
 
@@ -500,12 +521,42 @@ export const UI = {
     }
   },
 
-  toBase64(file) {
-    return new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = rej;
-      r.readAsDataURL(file);
+  // ✅ GÖRSEL KÜÇÜLTÜCÜ + SIKIŞTIRICI
+  // 4 MB JPEG → ~180 KB (yaklaşık %95 küçülme)
+  // Döndürür: { base64, previewUrl }
+  toBase64(file, maxDim = 640, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objUrl);
+
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const r = Math.min(maxDim / width, maxDim / height);
+          width  = Math.round(width  * r);
+          height = Math.round(height * r);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64  = dataUrl.split(',')[1];
+
+        resolve({ base64, previewUrl: dataUrl });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objUrl);
+        reject(new Error('Görüntü okunamadı'));
+      };
+
+      img.src = objUrl;
     });
   },
 
@@ -627,29 +678,59 @@ export const UI = {
       }
     };
 
+    // ✅ GÖRSEL YÜKLEME — v2 (küçültücü + sıkıştırıcı + boyut limiti)
     document.getElementById('selectImageBtn').onclick = () => document.getElementById('imageInput').click();
     document.getElementById('imageInput').onchange = async e => {
-      for (const f of Array.from(e.target.files || [])) {
-        const b64 = await this.toBase64(f);
-        State.currentImages.push(b64);
-        const div = document.createElement('div');
-        div.className = 'preview-item';
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(f);
-        const rm = document.createElement('span');
-        rm.className = 'remove-img';
-        rm.textContent = 'x';
-        rm.onclick = () => {
-          const idx = State.currentImages.indexOf(b64);
-          if (idx >= 0) State.currentImages.splice(idx, 1);
-          div.remove();
-          if (!State.currentImages.length) this.imagePreview.style.display = 'none';
-        };
-        div.appendChild(img);
-        div.appendChild(rm);
-        this.imagePreview.appendChild(div);
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      for (const f of files) {
+        // Sadece görüntü kabul et
+        if (!f.type.startsWith('image/')) {
+          console.warn('[Görsel] Atlanıyor (görüntü değil):', f.name);
+          continue;
+        }
+
+        // Boyut sınırı (kilitlenmeyi önler)
+        if (f.size > 15 * 1024 * 1024) {
+          alert(`"${f.name}" çok büyük (max 15 MB)`);
+          continue;
+        }
+
+        try {
+          // Yeni toBase64 artık obje döndürüyor
+          const { base64, previewUrl } = await this.toBase64(f);
+
+          State.currentImages.push(base64);
+
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+
+          const img = document.createElement('img');
+          img.src = previewUrl;
+          img.alt = f.name;
+          img.title = `${f.name} (${Math.round(f.size / 1024)} KB)`;
+
+          const rm = document.createElement('span');
+          rm.className = 'remove-img';
+          rm.textContent = '×';
+          rm.onclick = () => {
+            const idx = State.currentImages.indexOf(base64);
+            if (idx >= 0) State.currentImages.splice(idx, 1);
+            div.remove();
+            if (!State.currentImages.length) this.imagePreview.style.display = 'none';
+          };
+
+          div.appendChild(img);
+          div.appendChild(rm);
+          this.imagePreview.appendChild(div);
+        } catch (err) {
+          console.error('[Görsel] İşlenemedi:', f.name, err);
+          alert(`"${f.name}" yüklenemedi: ${err.message}`);
+        }
       }
-      this.imagePreview.style.display = 'flex';
+
+      this.imagePreview.style.display = State.currentImages.length ? 'flex' : 'none';
       e.target.value = '';
     };
 
@@ -881,4 +962,3 @@ export const UI = {
       this.setStopBtnState(false);
     }
   }};
-
