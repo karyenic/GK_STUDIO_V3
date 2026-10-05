@@ -1,0 +1,70 @@
+/* ============================================================
+   GK STUDIO - GÖRSEL ÖNİZLEME (Kilitlenme Önleyici)
+   ============================================================ */
+
+#imagePreview {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 90px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 4px;
+  align-items: center;
+  border-radius: 8px;
+}
+
+#imagePreview .preview-item {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+#imagePreview .preview-item img {
+  width: 60px !important;
+  height: 60px !important;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+#imagePreview .preview-item img:hover {
+  transform: scale(1.08);
+}
+
+#imagePreview .remove-img {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease;
+}
+
+#imagePreview .remove-img:hover {
+  background: #dc2626;
+  transform: scale(1.15);
+}
+
+/* Sohbet mesajlarında görsel (emniyet kemeri) */
+.msg img,
+.msg-wrapper img {
+  max-width: 240px !important;
+  max-height: 240px !important;
+  object-fit: cover;
+  border-radius: 8px;
+  display: inline-block;
+}
