@@ -34,6 +34,7 @@ GATEWAY_PORT = 11434
 IPEX_RUNNER_URL = f"http://127.0.0.1:{IPEX_RUNNER_PORT}"
 EMBEDDING_OLLAMA_URL = f"http://127.0.0.1:{EMBEDDING_OLLAMA_PORT}"
 GATEWAY_URL = f"http://127.0.0.1:{GATEWAY_PORT}"
+CHAT_OLLAMA_URL = GATEWAY_URL
 
 # KLASÖR VE DİZİN YAPISI
 CONV_DIR = os.path.join(BASE_DIR, "conversations")
@@ -75,6 +76,7 @@ VISION_CTX_PROFILE = {
     "moondream":         2048,
     "qwen2-vl":          2048,
     "qwen2.5-vl":        2048,
+    "qwen2.5vl":         2048,
 }
 
 DEFAULT_VISION_CTX = 2048
