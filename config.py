@@ -75,8 +75,8 @@ VISION_CTX_PROFILE = {
     "minicpm-v":         2048,
     "moondream":         2048,
     "qwen2-vl":          2048,
-    "qwen2.5-vl":        2048,
-    "qwen2.5vl":         2048,
+    "qwen2.5-vl":        8192,
+    "qwen2.5vl":         8192,
 }
 
 DEFAULT_VISION_CTX = 2048
