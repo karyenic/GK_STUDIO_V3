@@ -51,13 +51,20 @@ def get_num_ctx(model_name, extra_chars=0, is_project=False, is_vision=False):
 
 
 def get_installed_ollama_models():
-    """Embedding Ollama servisinden (Port 11435) yüklü modelleri çeker."""
+    """Chat Ollama servisinden (Port 11434) yüklü üretim modellerini çeker."""
     try:
-        req = urllib.request.Request(f"{EMBEDDING_OLLAMA_URL}/api/tags")
-        with urllib.request.urlopen(req, timeout=1.5) as resp:
+        req = urllib.request.Request(
+            f"{CHAT_OLLAMA_URL}/api/tags",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=2.0) as resp:
             if resp.status == 200:
                 data = json.loads(resp.read().decode("utf-8"))
-                return [m.get("name") for m in data.get("models", [])]
+                return [
+                    str(m.get("name") or "").strip()
+                    for m in data.get("models", [])
+                    if str(m.get("name") or "").strip()
+                ]
     except Exception:
         pass
     return []
@@ -73,7 +80,11 @@ def get_categorized_models():
 
     vision_models = [
         m for m in local_models 
-        if any(k in m.lower() for k in ["vision", "moondream", "granite"]) and "qwen3-vl" not in m.lower()
+        if any(k in m.lower() for k in [
+            "vision", "moondream", "granite", "qwen2-vl",
+            "qwen2.5-vl", "qwen2.5vl", "qwen3-vl",
+            "minicpm-v", "llava", "bakllava"
+        ])
     ]
     coder_models = [m for m in local_models if "coder" in m.lower()]
     reasoning_models = [m for m in local_models if any(k in m.lower() for k in ["r1", "deepseek"])]
