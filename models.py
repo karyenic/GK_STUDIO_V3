@@ -6,7 +6,7 @@ from config import (
 )
 import urllib.request
 import json
-from config import EMBEDDING_OLLAMA_URL
+from config import EMBEDDING_OLLAMA_URL, CHAT_OLLAMA_URL
 
 
 def get_num_ctx(model_name, extra_chars=0, is_project=False, is_vision=False):
