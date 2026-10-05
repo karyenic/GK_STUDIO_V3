@@ -63,12 +63,41 @@ class AIGateway:
         is_vision_request = bool(images and len(images) > 0)
 
         if not model or model == "auto":
+            installed = get_installed_ollama_models()
+
             if is_vision_request:
-                selected_model = "granite3.2-vision:2b"
-                route_label = "AUTO-VISION"
+                vision_candidates = [
+                    m for m in installed
+                    if any(k in m.lower() for k in [
+                        "qwen2.5vl", "qwen2.5-vl", "qwen2-vl",
+                        "qwen3-vl", "moondream", "llava", "bakllava",
+                        "minicpm-v", "vision", "granite"
+                    ])
+                ]
+
+                qwen_vl = [
+                    m for m in vision_candidates
+                    if "qwen2.5vl" in m.lower() or "qwen2.5-vl" in m.lower()
+                ]
+                moondream = [
+                    m for m in vision_candidates
+                    if "moondream" in m.lower()
+                ]
+
+                if qwen_vl:
+                    selected_model = qwen_vl[0]
+                    route_label = "AUTO-VISION-QWEN"
+                elif moondream:
+                    selected_model = moondream[0]
+                    route_label = "AUTO-VISION-MOONDREAM"
+                elif vision_candidates:
+                    selected_model = vision_candidates[0]
+                    route_label = "AUTO-VISION"
+                else:
+                    selected_model = DEFAULT_LOCAL_MODEL
+                    route_label = "AUTO-VISION-NO-MODEL"
             else:
                 p_lower = (prompt + " " + str(file_package or "")).lower()
-                installed = get_installed_ollama_models()
 
                 if any(k in p_lower for k in [
                     "kod", "python", "javascript", "fonksiyon", "class",
@@ -89,6 +118,12 @@ class AIGateway:
                 else:
                     selected_model = DEFAULT_LOCAL_MODEL
                     route_label = "AUTO-DEFAULT"
+
+        selected_lower = str(selected_model or "").lower()
+        is_selected_vision_model = any(k in selected_lower for k in [
+            "vision", "moondream", "qwen2-vl", "qwen2.5-vl", "qwen2.5vl",
+            "qwen3-vl", "minicpm-v", "llava", "bakllava"
+        ])
 
         # ✅ Manuel coder modeli seçimi de coder modunu tetiklesin
         if selected_model and (
@@ -255,8 +290,13 @@ class AIGateway:
                 images=images
             )
 
-        elif is_vision_request:
-            print(f"[VISION] {len(images)} görsel → {selected_model}", flush=True)
+        elif is_vision_request and (is_selected_vision_model or bool(images)):
+            print(
+                f"[VISION] {len(images)} görsel → {selected_model} | "
+                f"model_vision={is_selected_vision_model} | "
+                f"image_type={type(images[0]).__name__ if images else 'none'}",
+                flush=True
+            )
 
             role_extra = ROLE_PROMPTS.get(role, "") if role and role != "default" else ""
 
